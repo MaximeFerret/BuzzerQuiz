@@ -1,9 +1,4 @@
 class Singleton:
-    """
-    Classe de base pour créer un Singleton dans l'application.
-    Elle garantit qu'une seule instance de la classe est créée.
-    """
-
     _instances = {}
 
     def __new__(cls, *args, **kwargs):

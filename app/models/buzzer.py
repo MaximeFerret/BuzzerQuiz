@@ -1,15 +1,15 @@
 class Buzzer:
     def __init__(self):
-        self.buzzer_queue = []
+        self.buzzers = []
 
-    def press(self, player):
-        if player not in self.buzzer_queue:
-            self.buzzer_queue.append(player)
+    def buzz(self, user):
+        if user not in self.buzzers:
+            self.buzzers.append(user)
 
-    def get_next(self):
-        if self.buzzer_queue:
-            return self.buzzer_queue.pop(0)  # Retourne le premier
+    def get_first(self):
+        return self.buzzers[0] if self.buzzers else None
+
+    def next(self):
+        if self.buzzers:
+            return self.buzzers.pop(0)
         return None
-
-    def reset(self):
-        self.buzzer_queue = []
