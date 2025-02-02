@@ -1,0 +1,15 @@
+<h2>🛠 Édition du quiz</h2>
+
+{% if message %}
+    <p>{{ message }}</p>
+{% else %}
+    <ul>
+        {% for quiz in quizzes %}
+            <li>
+                <a href="{{ url_for('quiz.edit_quiz', quiz_id=quiz.id) }}">
+                    {{ quiz.title }}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+{% endif %}

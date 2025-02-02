@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - BuzzerQuiz</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Bienvenue sur votre espace</h1>
+    </header>
+    
+    <main>
+        <p>Bienvenue, vous êtes connecté !</p>
+    </main>
+
+    <div class="menu">
+        <h2>Bienvenue, {{ current_user.username }} !</h2>
+        
+        <a href="{{ url_for('quiz.start_quiz') }}" class="btn">🎮 Lancer un quiz</a>
+        <br>
+        <a href="{{ url_for('quiz.create_quiz') }}" class="btn">✏️ Créer un quiz</a>
+        <br>
+        <a href="{{ url_for('quiz.edit_quiz') }}" class="btn">🛠 Éditer un quiz</a>
+        <br><br>
+
+        <a href="{{ url_for('authentication.logout') }}">Déconnexion</a>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 - BuzzerQuiz</p>
+    </footer>
+</body>
+</html>

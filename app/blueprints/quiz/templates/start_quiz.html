@@ -1,0 +1,15 @@
+<h2>🎮 Lancer un quiz</h2>
+
+{% if message %}
+    <p>{{ message }}</p>
+{% else %}
+    <ul>
+        {% for quiz in quizzes %}
+            <li>
+                <a href="{{ url_for('quiz.start_quiz', quiz_id=quiz.id) }}">
+                    {{ quiz.title }}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+{% endif %}
