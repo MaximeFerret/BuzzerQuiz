@@ -3,3 +3,4 @@ class Config:
     SQLALCHEMY_DATABASE_URI = "sqlite:///buzzerquiz.db"  # Base de données SQLite
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     ADMIN_SECRET_CODE = "admin123"
+    # PERMANENT_SESSION_LIFETIME = 15 * 60

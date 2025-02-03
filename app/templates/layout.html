@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BuzzerQuiz</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <!-- Optional: For better alerts -->
+</head>
+
+<body>
+    <nav>
+        <!-- Votre code de navigation ici -->
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul>
+                    {% for category, message in messages %}
+                        <li class="alert alert-{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Le contenu de la page spécifique sera inclus ici -->
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <!-- Ajouter ici le script pour la gestion de l'inactivité -->
+    <script>
+        // Durée max d'inactivité avant déconnexion (10 min = 600000 ms)
+        const timeoutDuration = 600000;
+        const warningDuration = 60000; // Alerte 60 secondes avant expiration
+    
+        let timeout, warningTimeout;
+    
+        function resetTimers() {
+            clearTimeout(timeout);
+            clearTimeout(warningTimeout);
+    
+            // 🔥 Alerte 60 secondes avant expiration
+            warningTimeout = setTimeout(() => {
+                Swal.fire({
+                    title: 'Alerte!',
+                    text: "Vous allez être déconnecté dans 60 secondes pour inactivité.",
+                    icon: 'warning',
+                    timer: warningDuration,
+                    showCancelButton: true,
+                    confirmButtonText: 'Rester connecté',
+                    cancelButtonText: 'Se déconnecter'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        resetTimers();  // Remise à zéro des timers
+                    } else {
+                        window.location.href = "{{ url_for('authentication.logout') }}";
+                    }
+                });
+            }, timeoutDuration - warningDuration);
+    
+            // 🔥 Déconnexion automatique après l'inactivité
+            timeout = setTimeout(() => {
+                // Si l'utilisateur est un admin, redirigez vers la page d'admin
+                // Si l'utilisateur est un utilisateur, redirigez vers la page de login
+                if ("{{ session.get('is_admin') }}" === "True") {
+                    window.location.href = "{{ url_for('authentication.admin') }}";
+                } else {
+                    window.location.href = "{{ url_for('authentication.login') }}";
+                }
+            }, timeoutDuration);
+        }
+    
+        // 🔥 Réinitialiser les timers à chaque interaction de l'utilisateur
+        document.addEventListener("mousemove", resetTimers);
+        document.addEventListener("keydown", resetTimers);
+    
+        // Lancer les timers dès que la page est chargée
+        resetTimers();
+    </script>
+    
+</body>
+
+</html>

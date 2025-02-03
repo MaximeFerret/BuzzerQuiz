@@ -39,6 +39,20 @@ def register():
 
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
+    if session.get("is_user") and "user_last_active" in session:
+        last_active = session.get("user_last_active")
+        if datetime.now(timezone.utc) - last_active <= timedelta(minutes=10):
+            return redirect(url_for("authentication.dashboard"))
+        else:
+            # Si l'inactivité dépasse la limite, on le déconnecte
+            session.pop("is_user", None)
+            session.pop("user_last_active", None)
+            flash("Session expirée. Veuillez vous reconnecter.", "warning")
+            return redirect(url_for("authentication.login"))
+
+    # if current_user.is_authenticated:
+    #    return redirect(url_for('authentication.dashboard'))
+
     if request.method == "POST":
         email = request.form["email"]
         password = request.form["password"]
@@ -47,6 +61,8 @@ def login():
 
         if user and user.check_password(password):
             login_user(user)
+            session["is_user"] = True  # ✅ On stocke l'info dans la session
+            session["user_last_active"] = datetime.now(timezone.utc)
             # flash("Connexion réussie !", "success")
             return redirect(url_for("authentication.dashboard"))
         else:
@@ -59,6 +75,22 @@ def login():
 @auth_bp.route("/dashboard")
 @login_required
 def dashboard():
+    if not session.get("is_user") or "user_last_active" not in session:
+        return redirect(url_for("authentication.login"))
+
+    # Vérifie le temps d'inactivité
+    last_active = session.get("user_last_active")
+    if datetime.now(timezone.utc) - last_active > timedelta(
+        minutes=10
+    ):  # Déconnecte après 10 minutes
+        session.pop("is_user", None)
+        session.pop("user_last_active", None)
+        flash("Session expirée. Veuillez vous reconnecter.", "warning")
+        return redirect(url_for("authentication.login"))
+
+    # Met à jour le dernier moment d'activité
+    session["user_last_active"] = datetime.now(timezone.utc)
+
     return render_template("dashboard.html")
 
 
@@ -66,12 +98,27 @@ def dashboard():
 @login_required
 def logout():
     logout_user()
-    flash("Vous avez été déconnecté.", "info")
+    session.pop("is_user", None)
+    session.pop("user_last_active", None)
     return redirect(url_for("authentication.login"))
 
 
 @auth_bp.route("/admin", methods=["GET", "POST"])
 def admin():
+    if session.get("is_admin") and "admin_last_active" in session:
+        last_active = session.get("admin_last_active")
+        # Vérifie si la session admin est encore valide (en vérifiant l'inactivité)
+        if datetime.now(timezone.utc) - last_active <= timedelta(minutes=10):
+            return redirect(
+                url_for("authentication.admin_dashboard")
+            )  # Redirige directement vers le dashboard
+        else:
+            # Si l'inactivité dépasse la limite, on le déconnecte
+            session.pop("is_admin", None)
+            session.pop("admin_last_active", None)
+            flash("Session expirée. Veuillez vous reconnecter.", "warning")
+            return redirect(url_for("authentication.admin"))
+
     if request.method == "POST":
         secret_code = request.form["secret_code"]
 
@@ -97,7 +144,7 @@ def admin_dashboard():
     # Vérifie le temps d'inactivité
     last_active = session.get("admin_last_active")
     if datetime.now(timezone.utc) - last_active > timedelta(
-        minutes=5
+        minutes=10
     ):  # Déconnecte après 10 minutes
         session.pop("is_admin", None)
         session.pop("admin_last_active", None)
