@@ -1,13 +1,6 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vue Administrateur</title>
-</head>
-<body>
-<h1>Liste des utilisateurs</h1>
-<ul>
+{% extends "layout.html" %}
+
+{% block content %}
     {% for user in users %}
         <li>{{ user.username }} - {{ user.email }}
             <form method="POST" action="{{ url_for('authentication.delete_user', user_id=user.id) }}">
@@ -17,35 +10,6 @@
     {% endfor %}
 </ul>
 
+<a href="{{ url_for('authentication.admin_logout') }}">Déconnexion</a>
 
-<script>
-    // Durée max d'inactivité avant déconnexion (5 min = 300000 ms)
-    const timeoutDuration = 300000; 
-    const warningDuration = 30000; // Alerte 30 secondes avant expiration
-
-    let timeout, warningTimeout;
-
-    function resetTimers() {
-        clearTimeout(timeout);
-        clearTimeout(warningTimeout);
-
-        // 🔥 Alerte 30 secondes avant expiration
-        warningTimeout = setTimeout(() => {
-            alert("Attention ! Vous allez être déconnecté dans 30 secondes pour inactivité.");
-        }, timeoutDuration - warningDuration);
-
-        // 🔥 Déconnexion automatique après 5 min
-        timeout = setTimeout(() => {
-            window.location.href = "{{ url_for('authentication.admin') }}";
-        }, timeoutDuration);
-    }
-
-    // 🔥 Réinitialiser les timers à chaque interaction
-    document.addEventListener("mousemove", resetTimers);
-    document.addEventListener("keydown", resetTimers);
-
-    // Lancer les timers au chargement
-    resetTimers();
-</script>
-</body>
-</html>
+{% endblock %}

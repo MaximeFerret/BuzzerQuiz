@@ -105,6 +105,7 @@ def logout():
 
 @auth_bp.route("/admin", methods=["GET", "POST"])
 def admin():
+    print(session.get("is_admin"))
     if session.get("is_admin") and "admin_last_active" in session:
         last_active = session.get("admin_last_active")
         # Vérifie si la session admin est encore valide (en vérifiant l'inactivité)
@@ -170,3 +171,10 @@ def delete_user(user_id):
         db.session.commit()
         flash("Utilisateur supprimé avec succès.", "success")
     return redirect(url_for("authentication.admin_dashboard"))
+
+
+@auth_bp.route("/admin_logout")
+def admin_logout():
+    session.pop("is_admin", None)
+    session.pop("admin_last_active", None)
+    return redirect(url_for("authentication.admin"))
