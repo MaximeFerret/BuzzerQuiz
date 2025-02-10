@@ -56,7 +56,11 @@
                     if (result.isConfirmed) {
                         resetTimers();  // Remise à zéro des timers
                     } else {
-                        window.location.href = "{{ url_for('authentication.logout') }}";
+                        if ("{{ session.get('is_admin') }}" === "True") {
+                        window.location.href = "{{ url_for('authentication.admin_logout') }}";
+                        } else {
+                            window.location.href = "{{ url_for('authentication.logout') }}";
+                        }
                     }
                 });
             }, timeoutDuration - warningDuration);
