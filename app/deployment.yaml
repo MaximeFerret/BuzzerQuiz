@@ -17,6 +17,6 @@ spec:
        
           envFrom:
             - configMapRef:
-                name: buzzer-configuration
+                name: configmap
           ports:
             - containerPort: 5000
