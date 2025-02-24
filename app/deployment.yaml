@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: application
+spec:
+  selector:
+    matchLabels:
+      app: application
+  template:
+    metadata:
+      labels:
+        app: application
+    spec:
+      containers:
+        - name: application
+          image: ferretmaxime/buzzerquiz:1.0.0
+          resources:
+            limits:
+              memory: "200Mi"
+              cpu: "300m"
+          # Permet de charger les variables d'environnement dans votre application via le remplissage d'une ressources "cle" "valeur" kubernetes, le configmap.
+          envFrom:
+            - configMapRef:
+                name: configuration-application
+          ports:
+            - containerPort: 5000
+            
