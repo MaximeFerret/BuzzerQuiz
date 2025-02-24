@@ -14,6 +14,7 @@ spec:
       containers:
         - name: buzzer-application
           image: ferretmaxime/buzzerquiz:1.0.0
+           command: ["python3", "app.py"]
        
           envFrom:
             - configMapRef:
