@@ -14,10 +14,7 @@ spec:
       containers:
         - name: buzzer-application
           image: ferretmaxime/buzzerquiz:1.0.0
-          resources:
-            limits:
-              memory: "200Mi"
-              cpu: "300m"
+       
           envFrom:
             - configMapRef:
                 name: buzzer-configuration
