@@ -1,3 +1,4 @@
+
 {% extends "layout.html" %}
 
 {% block content %}
@@ -5,6 +6,49 @@
 <form method="POST">
     <label for="title">Titre du quiz :</label>
     <input type="text" name="title" required>
+
+    <h3>Questions :</h3>
+    <div id="questions-container"></div>
+
+    <button type="button" onclick="addQuestion()">➕ Ajouter une question</button>
+    <br><br>
+    <input type="hidden" name="question_count" id="question_count" value="0">
     <button type="submit">Créer</button>
 </form>
+
+<script>
+    let questionIndex = 0;
+
+    function addQuestion() {
+        let container = document.getElementById("questions-container");
+
+        let questionDiv = document.createElement("div");
+        questionDiv.classList.add("question-block");
+        questionDiv.innerHTML = `
+            <h4>Question ${questionIndex + 1}</h4>
+            <input type="text" name="question_${questionIndex}" placeholder="Texte de la question" required>
+            <div id="choices_${questionIndex}">
+                <button type="button" onclick="addChoice(${questionIndex})">➕ Ajouter un choix</button>
+            </div>
+        `;
+        container.appendChild(questionDiv);
+
+        document.getElementById("question_count").value = questionIndex + 1;
+        questionIndex++;
+    }
+
+    function addChoice(questionIdx) {
+        let choicesContainer = document.getElementById(`choices_${questionIdx}`);
+        let choiceIndex = choicesContainer.getElementsByTagName("input").length;
+
+        if (choiceIndex < 4) {  // Limite à 4 choix par question
+            let choiceInput = document.createElement("input");
+            choiceInput.type = "text";
+            choiceInput.name = `question_${questionIdx}_choice_${choiceIndex}`;
+            choiceInput.placeholder = `Choix ${choiceIndex + 1}`;
+            choiceInput.required = true;
+            choicesContainer.appendChild(choiceInput);
+        }
+    }
+</script>
 {% endblock %}

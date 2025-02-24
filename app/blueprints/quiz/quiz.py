@@ -4,7 +4,7 @@ from flask import (Blueprint, flash, redirect, render_template, request,
                    session, url_for)
 from flask_login import current_user, login_required
 from models.db import db
-from models.quiz import Question, Quiz
+from models.quiz import Answer, Question, Quiz
 
 quiz_bp = Blueprint("quiz", __name__, template_folder="templates")
 
@@ -58,6 +58,26 @@ def create_quiz():
         new_quiz = Quiz(title=quiz_title, creator_id=current_user.id)
         db.session.add(new_quiz)
         db.session.commit()
+
+        question_count = int(request.form.get("question_count", 0))
+
+        for i in range(question_count):
+            question_text = request.form.get(f"question_{i}")
+            if question_text:
+                new_question = Question(text=question_text, quiz_id=new_quiz.id)
+                db.session.add(new_question)
+                db.session.commit()
+
+                # Ajouter les choix associés à la question
+                for j in range(4):  # Maximum de 4 choix
+                    choice_text = request.form.get(f"question_{i}_choice_{j}")
+                    if choice_text:
+                        new_choice = Answer(
+                            text=choice_text, question_id=new_question.id
+                        )
+                        db.session.add(new_choice)
+                        db.session.commit()
+
         return redirect(url_for("authentication.dashboard"))
 
     return render_template("create_quiz.html")
