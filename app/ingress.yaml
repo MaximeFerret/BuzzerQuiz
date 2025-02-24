@@ -1,20 +1,20 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: application
+  name: buzzer-application
   labels:
-    name: application
+    name: buzzer-application
 spec:
   rules:
-    - host: application.kub.sspcloud.fr
-    # CETTE URL est unique, donc si quelqu'un l'a déjà prise vous ne pourrez pas la prendre
-    # Changer le host vers une url qui fonctionne, une url du type *.kub.sspcloud.fr exemple mon-application.kub.sspcloud.fr
+    - host: buzzer.kub.sspcloud.fr
+      # Changer le host vers une URL qui fonctionne. Par exemple : buzzer.kub.sspcloud.fr
       http:
         paths:
           - pathType: Prefix
             path: "/"
             backend:
               service:
-                name: application
+                name: buzzer-application
                 port:
                   number: 80
+
