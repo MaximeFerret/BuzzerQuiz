@@ -1,15 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: application
+  name: buzzer-application
 spec:
   selector:
-    app: application # doit correspondre a une valeur définie dans le deployment.yaml
-    #     metadata:
-    #        labels:
-    #          app: application
+    app: buzzer-application # Correspond à la valeur définie dans le deployment.yaml
   ports:
     # PORT QUE VOUS VOULEZ, 80 correspond au port standard http, doit correspondre côté ingress.
     - port: 80
       # PORT DU CONTENEUR, ET DONC DE VOTRE SERVEUR
       targetPort: 5000
+
