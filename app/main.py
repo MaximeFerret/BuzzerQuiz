@@ -8,7 +8,7 @@ from flask_wtf.csrf import CSRFProtect
 from frontend.blueprints.auth.auth import auth_bp
 from frontend.blueprints.quiz.quiz import quiz_bp
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="frontend/templates")
 app.config.from_object("backend.config.Config")
 
 db.init_app(app)
@@ -41,4 +41,4 @@ def homepage():
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()  # Crée la base de données si elle n'existe pas encore
-    app.run(debug=True)
+    app.run(host="0.0.0.0", debug=True)

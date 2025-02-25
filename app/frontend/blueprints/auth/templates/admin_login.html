@@ -8,6 +8,7 @@
 <body>
     <h1>Connexion Administrateur</h1>
     <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <label for="secret_code">Code Secret :</label>
         <input type="password" id="secret_code" name="secret_code" required>
         <button type="submit">Valider</button>

@@ -26,6 +26,11 @@ def register():
             flash("Cet email est déjà utilisé.", "danger")
             return redirect(url_for("authentication.register"))
 
+        existing_username = User.query.filter_by(username=username).first()
+        if existing_username:
+            flash("Ce nom d'utilisateur est déjà utilisé.", "danger")
+            return redirect(url_for("authentication.register"))
+
         new_user = User(username=username, email=email)
         new_user.set_password(password)
         db.session.add(new_user)
