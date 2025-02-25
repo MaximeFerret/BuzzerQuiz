@@ -1,7 +1,9 @@
 # On part d'un environnement Ubuntu 22.04
 FROM ubuntu:22.04
 # On installe Python et pip
-RUN apt-get update && apt-get install -y python3-pip
+
+RUN apt-get update && apt-get install -y python3-pip python-is-python3
+
 # On copie les fichiers de notre projet dans l'environnement
 
 COPY . .
