@@ -4,6 +4,7 @@ from flask import Flask, render_template
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from flask_wtf.csrf import CSRFProtect
 from models.db import db
 from models.user import User
 
@@ -16,6 +17,8 @@ migrate = Migrate(app, db)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "authentication.login"
+
+csrf = CSRFProtect(app)
 
 # app.permanent_session_lifetime = app.config['PERMANENT_SESSION_LIFETIME']
 

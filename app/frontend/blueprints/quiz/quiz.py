@@ -116,12 +116,87 @@ def edit_quiz_by_id(quiz_id):
         return redirect(url_for("quiz.edit_quiz"))
 
     if request.method == "POST":
-        question_text = request.form["question"]
-        new_question = Question(text=question_text, quiz_id=quiz.id)
-        db.session.add(new_question)
+        quiz_title = request.form["title"]
+        quiz.title = quiz_title  # Modifie le titre du quiz
         db.session.commit()
 
-    return render_template("edit_quiz.html", quiz=quiz)
+        # Gérer les questions et les choix
+        question_count = int(request.form.get("question_count", 0))
+
+        # Suppression des anciennes questions et choix (si nécessaire)
+        for question in quiz.questions:
+            db.session.delete(question)
+        db.session.commit()
+
+        # Ajouter les nouvelles questions
+        for i in range(question_count):
+            question_text = request.form.get(f"question_{i}")
+            if question_text:
+                new_question = Question(text=question_text, quiz_id=quiz.id)
+                db.session.add(new_question)
+                db.session.commit()
+
+                # Ajouter les choix associés à la question
+                for j in range(4):  # Maximum de 4 choix
+                    choice_text = request.form.get(f"question_{i}_choice_{j}")
+                    if choice_text:
+                        new_choice = Answer(
+                            text=choice_text, question_id=new_question.id
+                        )
+                        db.session.add(new_choice)
+                        db.session.commit()
+
+        db.session.commit()
+
+    # Récupérer les questions et les choix du quiz
+    questions = quiz.questions
+    return render_template("edit_quiz_form.html", quiz=quiz, questions=questions)
+
+
+@quiz_bp.route("/quiz/<int:quiz_id>/update", methods=["POST"])
+def update_quiz(quiz_id):
+    quiz = Quiz.query.get_or_404(quiz_id)
+
+    # Mettre à jour le titre
+    quiz.title = request.form.get("title")
+
+    # Supprimer les questions marquées
+    for q_id in request.form.getlist("remove_question[]"):
+        Question.query.filter_by(id=q_id).delete()
+
+    # Supprimer les choix marqués
+    for c_id in request.form.getlist("remove_choice[]"):
+        Answer.query.filter_by(id=c_id).delete()
+
+    # Mettre à jour les questions existantes
+    for question in quiz.questions:
+        new_text = request.form.get(f"question_{question.id}")
+        if new_text:  # Vérifie que le texte n'est pas vide
+            question.text = new_text
+
+        for choice in question.answers:
+            choice_text = request.form.get(f"choice_{question.id}_{choice.id}")
+            if choice_text:
+                choice.text = choice_text  # Mise à jour du texte du choix
+
+    # Ajouter les nouvelles questions
+    for key, value in request.form.items():
+        if "choice" in key and value.strip():  # On vérifie que la clé contient "choice"
+            parts = key.split(
+                "_"
+            )  # Exemple: "question_2_choice_1" -> ["question", "2", "choice", "1"]
+
+            if len(parts) == 4:  # Vérifie que la clé correspond bien à un choix
+                question_id = int(parts[1])  # ID de la question associée
+
+                # Vérifier si la question existe bien
+                question = Question.query.get(question_id)
+                if question:
+                    new_choice = Answer(text=value, question_id=question.id)
+                    db.session.add(new_choice)
+
+        db.session.commit()
+    return redirect(url_for("authentication.dashboard"))
 
 
 @quiz_bp.route("/start/<int:quiz_id>", methods=["GET"])

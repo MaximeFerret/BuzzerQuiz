@@ -9,7 +9,8 @@
     <ul>
         {% for quiz in quizzes %}
             <li>
-                <a href="{{ url_for('quiz.edit_quiz', quiz_id=quiz.id) }}">
+                <!-- Vérification du lien généré pour chaque quiz -->
+                <a href="{{ url_for('quiz.edit_quiz_by_id', quiz_id=quiz.id) }}">
                     {{ quiz.title }}
                 </a>
             </li>
