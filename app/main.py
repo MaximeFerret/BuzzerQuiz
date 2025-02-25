@@ -9,7 +9,7 @@ from frontend.blueprints.auth.auth import auth_bp
 from frontend.blueprints.quiz.quiz import quiz_bp
 
 app = Flask(__name__)
-app.config.from_object("app.config.Config")
+app.config.from_object("backend.config.Config")
 
 db.init_app(app)
 migrate = Migrate(app, db)
