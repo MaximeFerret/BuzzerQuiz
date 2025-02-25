@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: buzzer-application
+spec:
+  selector:
+    matchLabels:
+      app: buzzer-application
+  template:
+    metadata:
+      labels:
+        app: buzzer-application
+    spec:
+      containers:
+        - name: buzzer-application
+          image: ferretmaxime/buzzerquiz:latest
+          command: ["python", "main.py"]
+          resources:
+            limits:
+              memory: "200Mi"
+              cpu: "300m"
+       
+          envFrom:
+            - configMapRef:
+                name: buzzerquiz-config
+          ports:
+            - containerPort: 5000
