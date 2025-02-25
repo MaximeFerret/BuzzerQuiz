@@ -1,15 +1,16 @@
-from blueprints.auth.auth import auth_bp
-from blueprints.quiz.quiz import quiz_bp
+from backend.models.db import db
+from backend.models.user import User
 from flask import Flask, render_template
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
-from models.db import db
-from models.user import User
+from frontend.blueprints.auth.auth import auth_bp
+from frontend.blueprints.quiz.quiz import quiz_bp
 
 app = Flask(__name__)
-app.config.from_object("config.Config")
+app.config.from_object("app.config.Config")
+
 db.init_app(app)
 migrate = Migrate(app, db)
 

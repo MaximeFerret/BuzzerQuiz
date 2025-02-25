@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta, timezone
 
+from backend.models.db import db
+from backend.models.quiz import Answer, Question, Quiz
 from flask import (Blueprint, flash, redirect, render_template, request,
                    session, url_for)
 from flask_login import current_user, login_required
-from models.db import db
-from models.quiz import Answer, Question, Quiz
 
 quiz_bp = Blueprint("quiz", __name__, template_folder="templates")
 

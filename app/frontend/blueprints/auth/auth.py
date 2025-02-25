@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta, timezone
 
+from backend.models.db import db
+from backend.models.user import User
 from flask import (Blueprint, current_app, flash, redirect, render_template,
                    request, session, url_for)
 from flask_login import current_user, login_required, login_user, logout_user
-from models.db import db
-from models.user import User
 
 auth_bp = Blueprint("authentication", __name__, template_folder="templates")
 

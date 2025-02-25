@@ -1,5 +1,5 @@
+from backend.models.db import db
 from flask_sqlalchemy import SQLAlchemy
-from models.db import db
 
 
 class Quiz(db.Model):
