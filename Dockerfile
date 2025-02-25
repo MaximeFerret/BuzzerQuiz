@@ -8,6 +8,8 @@ RUN apt-get update && apt-get install -y python3-pip python-is-python3
 
 COPY . /app/backend
 # On installe les dépendances à partir du fichier requirements.txt
+WORKDIR /app/backend
+
 RUN pip install -r requirements.txt
 # On définit la commande à exécuter pour lancer notre application
 ENTRYPOINT ["python", "main.py"]
