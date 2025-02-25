@@ -6,7 +6,6 @@ RUN apt-get update && apt-get install -y python3-pip && ln -s /usr/bin/python3 /
 # On copie les fichiers de notre projet dans l'environnement
 COPY . .
 # On installe les dépendances à partir du fichier requirements.txt
-WORKDIR /app
 
 RUN pip install -r requirements.txt
 # On définit la commande à exécuter pour lancer notre application
