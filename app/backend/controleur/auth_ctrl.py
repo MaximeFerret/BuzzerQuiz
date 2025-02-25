@@ -1,12 +1,12 @@
 from flask import (Blueprint, current_app, flash, redirect, render_template,
                    request, session, url_for)
 from flask_login import current_user, login_required, login_user, logout_user
-from app.backend.models.user import User
-from app.backend.services.auth_service import AuthService
-from app.backend.models import db
+from backend.models import db
+from backend.models.user import User
+from backend.services.auth_service import AuthService
 from datetime import datetime, timezone, timedelta
 
-auth_bp = Blueprint("authentication", __name__, template_folder="templates")
+auth_bp = Blueprint("authentication", __name__, template_folder="../../frontend/blueprints/auth/templates")
 
 @auth_bp.route("/register", methods=["GET", "POST"])
 def register():

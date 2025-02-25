@@ -1,7 +1,7 @@
-from app.backend.dao.auth_dao import UserDAO
+from backend.dao.auth_dao import UserDAO
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user
-from app.backend.models import db
+from backend.models import db
 from datetime import datetime, timedelta
 
 class AuthService:

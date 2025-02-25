@@ -1,5 +1,5 @@
-from app.backend.models.user import User
-from app.backend.models import db
+from backend.models.user import User
+from backend.models import db
 from datetime import datetime, timezone
 
 class UserDAO:
