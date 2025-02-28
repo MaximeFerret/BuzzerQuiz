@@ -4,6 +4,7 @@
 <h2>Édition du quiz : {{ quiz.title }}</h2>
 
 <form method="POST" action="{{ url_for('quiz.update_quiz', quiz_id=quiz.id) }}" onsubmit="return validateForm()">
+
     <!-- CSRF Token -->
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
@@ -12,35 +13,39 @@
 
     <h3>Questions :</h3>
     <div id="questions-container">
-        {% for question in quiz.questions %}
-            <div class="question-block" data-index="{{ loop.index0 }}" id="question-{{ question.id }}">
-                <h4>Question {{ loop.index }}</h4>
-                <input type="text" name="question_{{ question.id }}" value="{{ question.text }}" required>
-                <button type="button" onclick="removeQuestion({{ question.id }})">❌ Supprimer</button>
-                <div id="choices_{{ question.id }}">
-                    {% for choice in question.answers %}
-                        <div class="choice-block" data-index="{{ loop.index0 }}" id="choice-{{ choice.id }}">
-                            <input type="text" name="choice_{{ question.id }}_{{ choice.id }}" value="{{ choice.text }}" required>
-                            <button type="button" onclick="removeChoice({{ choice.id }}, {{ question.id }})">❌</button>
-                        </div>
-                    {% endfor %}
+        {% for question in questions %}
+        <div class="question-block" data-index="{{ loop.index0 }}">
+            <h4>Question {{ loop.index }}</h4>
+            <input type="text" name="question_{{ question.id }}" value="{{ question.text }}" required>
+
+            <div id="choices_{{ loop.index0 }}">
+                {% for answer in question.answers %}
+                <div class="choice-block">
+                    <input type="text" name="choice_{{ question.id }}_{{ answer.id }}" value="{{ answer.text }}" required>
+                    <button type="button" onclick="removeChoice(this, {{ loop.index0 }})">❌</button>
                 </div>
-                <button type="button" onclick="addChoice({{ question.id }})">➕ Ajouter un choix</button>
+                {% endfor %}
+                <button type="button" onclick="addChoice({{ loop.index0 }})">➕ Ajouter un choix</button>
             </div>
+
+            <button type="button" onclick="removeQuestion(this)">❌ Supprimer la question</button>
+        </div>
         {% endfor %}
     </div>
 
     <button type="button" onclick="addQuestion()">➕ Ajouter une question</button>
-    <button type="submit">Mettre à jour</button>
-    <button type="button" onclick="cancelChanges()">Annuler</button>
+    <br><br>
+
+    <button type="submit">💾 Sauvegarder les modifications</button>
+    <button type="button" onclick="cancelChanges()">❌ Annuler</button>
+    <button type="button" onclick="deleteQuiz()">🗑 Supprimer ce quiz</button>
 </form>
 
 <script>
     function addQuestion() {
         let container = document.getElementById("questions-container");
-        let questionBlocks = container.getElementsByClassName("question-block");
-        let questionIndex = questionBlocks.length;
-        
+        let questionIndex = container.getElementsByClassName("question-block").length;
+
         let questionDiv = document.createElement("div");
         questionDiv.classList.add("question-block");
         questionDiv.dataset.index = questionIndex;
@@ -53,87 +58,73 @@
             <button type="button" onclick="removeQuestion(this)">❌ Supprimer</button>
         `;
         container.appendChild(questionDiv);
-        updateQuestionNumbers();
     }
 
     function addChoice(questionIdx) {
         let choicesContainer = document.getElementById(`choices_${questionIdx}`);
-        let choiceIndex = choicesContainer.querySelectorAll(".choice-block").length;
-    
-        if (choiceIndex < 4) {  // Empêche d'ajouter plus de 4 choix
-            let choiceDiv = document.createElement("div");
-            choiceDiv.classList.add("choice-block");
-            choiceDiv.dataset.index = choiceIndex;
-    
-            choiceDiv.innerHTML = `
-                <input type="text" name="question_${questionIdx}_choice_${choiceIndex}" placeholder="Choix ${choiceIndex + 1}" required>
-                <button type="button" onclick="removeChoice(this, ${questionIdx})">❌</button>
-            `;
-    
-            choicesContainer.appendChild(choiceDiv);
-    
-            // Met à jour les numéros des choix
-            updateChoiceNumbers(questionIdx);
-        }
-    }
-    
-    function updateChoiceNumbers(questionIdx) {
-        let choicesContainer = document.getElementById(`choices_${questionIdx}`);
-        let choices = choicesContainer.querySelectorAll(".choice-block");
-    
-        choices.forEach((choice, index) => {
-            choice.dataset.index = index;
-            let input = choice.querySelector("input");
-            input.name = `question_${questionIdx}_choice_${index}`;
-            input.placeholder = `Choix ${index + 1}`;
-        });
-    }
-    
-    
+        let choiceBlocks = choicesContainer.getElementsByClassName("choice-block");
 
-    function removeQuestion(button) {
-        if (confirm("Êtes-vous sûr de vouloir supprimer cette question ?")) {
-            button.parentElement.remove();
-            updateQuestionNumbers();
+        if (choiceBlocks.length >= 4) {
+            alert("Vous ne pouvez ajouter que 4 choix maximum par question.");
+            return;
         }
+
+        let choiceIndex = choiceBlocks.length;
+
+        let choiceDiv = document.createElement("div");
+        choiceDiv.classList.add("choice-block");
+        choiceDiv.innerHTML = `
+            <input type="text" name="question_${questionIdx}_choice_${choiceIndex}" 
+                   placeholder="Choix ${choiceIndex + 1}" required>
+            <button type="button" onclick="removeChoice(this, ${questionIdx})">❌</button>
+        `;
+
+        choicesContainer.insertBefore(choiceDiv, choicesContainer.lastElementChild);
+        reindexChoices(questionIdx);
     }
 
     function removeChoice(button, questionIdx) {
-        if (confirm("Êtes-vous sûr de vouloir supprimer ce choix ?")) {
-            button.parentElement.remove();
-            updateChoiceNumbers(questionIdx);
+        if (!confirm("Êtes-vous sûr de vouloir supprimer ce choix ? Cette action est irréversible.")) {
+            return; // Annuler la suppression si l'utilisateur refuse
+        }
+
+        let choicesContainer = document.getElementById(`choices_${questionIdx}`);
+        button.parentElement.remove();
+        reindexChoices(questionIdx);
+    }
+
+    function reindexChoices(questionIdx) {
+        let choicesContainer = document.getElementById(`choices_${questionIdx}`);
+        let choiceBlocks = choicesContainer.getElementsByClassName("choice-block");
+
+        for (let i = 0; i < choiceBlocks.length; i++) {
+            let input = choiceBlocks[i].querySelector("input");
+            input.name = `question_${questionIdx}_choice_${i}`;
+            input.placeholder = `Choix ${i + 1}`;
         }
     }
 
-    function updateQuestionNumbers() {
-        let questions = document.querySelectorAll(".question-block");
-        questions.forEach((question, index) => {
-            question.dataset.index = index;
-            question.querySelector("h4").textContent = `Question ${index + 1}`;
-        });
+    function cancelChanges() {
+        if (confirm("Toutes les modifications non enregistrées seront perdues. Continuer ?")) {
+            window.location.href = "{{ url_for('authentication.dashboard') }}";
+        }
     }
 
-    function updateChoiceNumbers(questionIdx) {
-        let choicesContainer = document.getElementById(`choices_${questionIdx}`);
-        let choices = choicesContainer.querySelectorAll(".choice-block");
-        
-        choices.forEach((choice, index) => {
-            choice.dataset.index = index;
-            let input = choice.querySelector("input");
-            input.name = `question_${questionIdx}_choice_${index}`;
-            input.placeholder = `Choix ${index + 1}`;
-        });
+    function deleteQuiz() {
+        if (confirm("Voulez-vous vraiment supprimer ce quiz ? Cette action est irréversible.")) {
+            window.location.href = "{{ url_for('quiz.delete_quiz', quiz_id=quiz.id) }}";
+        }
     }
 
     function validateForm() {
         let title = document.getElementById("quiz-title").value.trim();
         let questions = document.querySelectorAll(".question-block");
-        
+
         if (!title) {
             alert("Le titre du quiz est requis.");
             return false;
         }
-        
+
         if (questions.length === 0) {
             alert("Ajoutez au moins une question.");
             return false;
@@ -141,19 +132,14 @@
 
         for (let question of questions) {
             let choices = question.querySelectorAll(".choice-block input");
-            if (choices.length > 0 && choices.length < 2) {
-                alert("Si vous ajoutez des choix, il doit y en avoir au moins 2.");
+
+            if (choices.length === 1) {
+                alert("Une question ne peut pas avoir un seul choix. Supprimez-le ou ajoutez-en un autre.");
                 return false;
             }
         }
-        
-        return true;
-    }
 
-    function cancelChanges() {
-        if (confirm("Êtes-vous sûr de vouloir annuler vos modifications ? Toutes les modifications non enregistrées seront perdues.")) {
-            window.location.href = "{{ url_for('authentication.dashboard') }}";
-        }
+        return true;
     }
 </script>
 {% endblock %}

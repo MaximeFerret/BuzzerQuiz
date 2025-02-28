@@ -153,49 +153,105 @@ def edit_quiz_by_id(quiz_id):
     return render_template("edit_quiz_form.html", quiz=quiz, questions=questions)
 
 
-@quiz_bp.route("/quiz/<int:quiz_id>/update", methods=["POST"])
-def update_quiz(quiz_id):
+@quiz_bp.route("/delete/<int:quiz_id>", methods=["GET"])
+@login_required
+def delete_quiz(quiz_id):
+    session_check = check_session()
+    if session_check:
+        return session_check
+
     quiz = Quiz.query.get_or_404(quiz_id)
 
-    # Mettre à jour le titre
-    quiz.title = request.form.get("title")
+    if quiz.creator_id != current_user.id:
+        flash("Vous n'êtes pas autorisé à supprimer ce quiz.", "danger")
+        return redirect(url_for("quiz.edit_quiz"))
 
-    # Supprimer les questions marquées
-    for q_id in request.form.getlist("remove_question[]"):
-        Question.query.filter_by(id=q_id).delete()
+    # Supprimer le quiz et toutes ses questions/réponses
+    db.session.delete(quiz)
+    db.session.commit()
+    flash("Quiz supprimé avec succès.", "success")
 
-    # Supprimer les choix marqués
-    for c_id in request.form.getlist("remove_choice[]"):
-        Answer.query.filter_by(id=c_id).delete()
+    return redirect(url_for("authentication.dashboard"))
 
-    # Mettre à jour les questions existantes
+
+@quiz_bp.route("/quiz/<int:quiz_id>/update", methods=["POST"])
+@login_required
+def update_quiz(quiz_id):
+    quiz = Quiz.query.get_or_404(quiz_id)
+    # Vérifier que l'utilisateur est bien le créateur du quiz
+    if quiz.creator_id != current_user.id:
+        flash("Vous n'êtes pas autorisé à modifier ce quiz.", "danger")
+        return redirect(url_for("authentication.dashboard"))
+
+    # Mettre à jour le titre du quiz
+    quiz.title = request.form.get("title", "").strip()
+
+    # Supprimer les choix marqués pour suppression
+    removed_choices = request.form.getlist("remove_choice[]")
+    for choice_id in removed_choices:
+        if choice_id.isdigit():
+            Answer.query.filter_by(id=int(choice_id)).delete()
+
+    # Supprimer les questions marquées pour suppression
+    removed_questions = request.form.getlist("remove_question[]")
+    for question_id in removed_questions:
+        if question_id.isdigit():
+            Question.query.filter_by(id=int(question_id)).delete()
+
+    # Mise à jour des questions existantes
     for question in quiz.questions:
-        new_text = request.form.get(f"question_{question.id}")
-        if new_text:  # Vérifie que le texte n'est pas vide
+        new_text = request.form.get(f"question_{question.id}", "").strip()
+        if new_text:
             question.text = new_text
 
         for choice in question.answers:
-            choice_text = request.form.get(f"choice_{question.id}_{choice.id}")
+            choice_text = request.form.get(
+                f"choice_{question.id}_{choice.id}", ""
+            ).strip()
+            choice_is_correct = (
+                request.form.get(f"correct_{question.id}_{choice.id}") == "on"
+            )
+
             if choice_text:
-                choice.text = choice_text  # Mise à jour du texte du choix
+                choice.text = choice_text
+                choice.is_correct = choice_is_correct
 
-    # Ajouter les nouvelles questions
+    # Ajout de nouvelles questions
+    new_questions = []
     for key, value in request.form.items():
-        if "choice" in key and value.strip():  # On vérifie que la clé contient "choice"
-            parts = key.split(
-                "_"
-            )  # Exemple: "question_2_choice_1" -> ["question", "2", "choice", "1"]
+        if key.startswith("new_question_") and value.strip():
+            question_text = value.strip()
+            new_question = Question(text=question_text, quiz_id=quiz.id)
+            db.session.add(new_question)
+            new_questions.append(new_question)
 
-            if len(parts) == 4:  # Vérifie que la clé correspond bien à un choix
-                question_id = int(parts[1])  # ID de la question associée
+    db.session.commit()  # Commit des nouvelles questions pour obtenir leurs ID
 
-                # Vérifier si la question existe bien
-                question = Question.query.get(question_id)
-                if question:
-                    new_choice = Answer(text=value, question_id=question.id)
-                    db.session.add(new_choice)
+    # Ajout des choix pour les nouvelles questions
+    for new_question in new_questions:
+        question_id = (
+            new_question.id
+        )  # Maintenant que la question est commitée, elle a un ID
 
-        db.session.commit()
+        for choice_index in range(4):  # Maximum de 4 choix
+            choice_text = request.form.get(
+                f"new_choice_{question_id}_{choice_index}", ""
+            ).strip()
+            choice_is_correct = (
+                request.form.get(f"new_correct_{question_id}_{choice_index}") == "on"
+            )
+
+            if choice_text:
+                new_choice = Answer(
+                    text=choice_text,
+                    is_correct=choice_is_correct,
+                    question_id=question_id,
+                )
+                db.session.add(new_choice)
+
+    db.session.commit()
+
+    flash("Quiz mis à jour avec succès !", "success")
     return redirect(url_for("authentication.dashboard"))
 
 
