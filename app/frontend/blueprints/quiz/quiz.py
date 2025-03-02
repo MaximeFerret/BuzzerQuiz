@@ -274,7 +274,7 @@ def start_quiz_by_id(quiz_id):
     quiz = Quiz.query.get_or_404(quiz_id)
 
     # Si l'utilisateur n'est pas le créateur du quiz, tu peux le rediriger
-    if quiz.creator_id != current_user.id:
-        return redirect(url_for("quiz.start_quiz"))
+    # if quiz.creator_id != current_user.id:
+    #   return redirect(url_for("quiz.start_quiz"))
 
-    return render_template("start_quiz_game.html", quiz=quiz)
+    return render_template("quiz_buzzer.html", quiz=quiz)
