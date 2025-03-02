@@ -1,19 +1,31 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<h2>🎮 Lancer un quiz</h2>
+<header>
+   <h2>🎮 Lancer un quiz</h2>
+</header>
 
-{% if message %}
-    <p>{{ message }}</p>
-{% else %}
-    <ul>
-        {% for quiz in quizzes %}
-            <li>
-                <a href="{{ url_for('quiz.start_quiz', quiz_id=quiz.id) }}">
-                    {{ quiz.title }}
-                </a>
-            </li>
-        {% endfor %}
-    </ul>
-{% endif %}
+<main>
+    {% if quizzes %}
+        <ul>
+            {% for quiz in quizzes %}
+                <li>
+                    <a href="{{ url_for('quiz.start_quiz_by_id', quiz_id=quiz.id) }}">
+
+                        {{ quiz.title }}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Aucun quiz disponible pour le moment.</p>
+    {% endif %}
+
+    <br>
+    <a href="{{ url_for('quiz.create_quiz') }}" class="btn">✏️ Créer un quiz</a>
+</main>
+
+<footer>
+    <p>&copy; 2025 - BuzzerQuiz</p>
+</footer>
 {% endblock %}
