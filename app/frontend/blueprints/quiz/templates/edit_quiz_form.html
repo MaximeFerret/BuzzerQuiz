@@ -35,13 +35,47 @@
 
     <button type="button" onclick="addQuestion()">➕ Ajouter une question</button>
     <br><br>
-
+    <input type="hidden" id="remove-questions" name="remove_question[]">
     <button type="submit">💾 Sauvegarder les modifications</button>
     <button type="button" onclick="cancelChanges()">❌ Annuler</button>
     <button type="button" onclick="deleteQuiz()">🗑 Supprimer ce quiz</button>
 </form>
 
 <script>
+    function removeQuestion(button) {
+        if (!confirm("Êtes-vous sûr de vouloir supprimer cette question ?")) return;
+    
+        let questionBlock = button.closest(".question-block"); 
+        let questionInput = questionBlock.querySelector("input[name^='question_']");
+    
+        let removeInput = document.getElementById("remove-questions");
+        if (!removeInput) {
+            console.error("⚠ Erreur: champ 'remove-questions' non trouvé !");
+            return;
+        }
+    
+        if (questionInput) {
+            let questionName = questionInput.name; 
+            let match = questionName.match(/^question_(\d+)$/);
+            
+            if (match) {
+                let questionId = match[1]; 
+    
+                // Ajoute l'ID à supprimer dans l'input caché
+                let idsToRemove = removeInput.value ? removeInput.value.split(",") : [];
+                if (!idsToRemove.includes(questionId)) {
+                    idsToRemove.push(questionId);
+                }
+                removeInput.value = idsToRemove.join(",");
+            }
+        }
+    
+        questionBlock.remove();
+        updateQuestionNumbers();
+    }
+    
+    
+
     function addQuestion() {
         let container = document.getElementById("questions-container");
         let questionIndex = container.getElementsByClassName("question-block").length;
@@ -63,25 +97,34 @@
     function addChoice(questionIdx) {
         let choicesContainer = document.getElementById(`choices_${questionIdx}`);
         let choiceBlocks = choicesContainer.getElementsByClassName("choice-block");
-
+    
         if (choiceBlocks.length >= 4) {
             alert("Vous ne pouvez ajouter que 4 choix maximum par question.");
             return;
         }
-
+    
         let choiceIndex = choiceBlocks.length;
-
+    
+        let questionBlock = document.querySelector(`.question-block[data-index="${questionIdx}"]`);
+        let questionInput = questionBlock.querySelector("input[name^='question_']");
+        
+        let questionId = questionInput ? questionInput.name.match(/^question_(\d+)$/)?.[1] : null;
+        
+        // 🔥 Si la question existe en BDD, on utilise son ID. Sinon, on garde l'index front-end.
+        let inputName = questionId ? `new_choice_${questionId}_${choiceIndex}` : `new_choice_new_${questionIdx}_${choiceIndex}`;
+    
         let choiceDiv = document.createElement("div");
         choiceDiv.classList.add("choice-block");
+        
         choiceDiv.innerHTML = `
-            <input type="text" name="question_${questionIdx}_choice_${choiceIndex}" 
-                   placeholder="Choix ${choiceIndex + 1}" required>
+            <input type="text" name="${inputName}" placeholder="Choix ${choiceIndex + 1}" required>
             <button type="button" onclick="removeChoice(this, ${questionIdx})">❌</button>
         `;
-
+    
         choicesContainer.insertBefore(choiceDiv, choicesContainer.lastElementChild);
-        reindexChoices(questionIdx);
     }
+    
+    
 
     function removeChoice(button, questionIdx) {
         if (!confirm("Êtes-vous sûr de vouloir supprimer ce choix ? Cette action est irréversible.")) {
@@ -93,6 +136,17 @@
         reindexChoices(questionIdx);
     }
 
+    function updateQuestionNumbers() {
+        let questions = document.querySelectorAll(".question-block");
+        
+        questions.forEach((question, index) => {
+            question.querySelector("h4").textContent = `Question ${index + 1}`;
+            
+            // NE MODIFIE PAS les attributs "name" et "id" ici !
+        });
+    }
+    
+    
     function reindexChoices(questionIdx) {
         let choicesContainer = document.getElementById(`choices_${questionIdx}`);
         let choiceBlocks = choicesContainer.getElementsByClassName("choice-block");
@@ -103,6 +157,7 @@
             input.placeholder = `Choix ${i + 1}`;
         }
     }
+
 
     function cancelChanges() {
         if (confirm("Toutes les modifications non enregistrées seront perdues. Continuer ?")) {
