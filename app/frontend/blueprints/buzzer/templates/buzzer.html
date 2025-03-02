@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Buzzer - BuzzerQuiz</title>
+    
+    <!-- Lien vers le fichier CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <!-- Script pour SocketIO -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.0/socket.io.js"></script>
+    
+    <!-- Lien vers le fichier JavaScript -->
+    <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+</head>
+<body>
+
+    <h1>Buzzer Quiz - Temps Réel</h1>
+
+    <button id="buzzer-btn">🔴 BUZZER</button>
+    <div id="result"></div>
+
+    <a href="{{ url_for('quiz.start_quiz') }}">Retour au quiz</a>
+
+</body>
+</html>

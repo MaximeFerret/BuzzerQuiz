@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h2>🎮 Quiz : {{ quiz.title }}</h2>
+
+
+<div id="quiz-container">
+    {% for question in quiz.questions %}
+        <h3>{{ question.text }}</h3>
+        <ul>
+            {% for answer in question.answers %}
+                <li>{{ answer.text }}</li>
+            {% endfor %}
+        </ul>
+    {% endfor %}
+</div>
+
+<hr>
+
+
+<div id="buzzer-container">
+    <button id="buzzer-btn" class="buzzer">
+        <span class="buzzer-text">🔴 BUZZER </span>
+    </button>
+</div>
+<p id="result"></p>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
+<script src="{{ url_for('static', filename='js/buzzer.js') }}"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/buzzer.css') }}">
+
+{% endblock %}
