@@ -178,7 +178,6 @@ def delete_quiz(quiz_id):
 @login_required
 def update_quiz(quiz_id):
     quiz = Quiz.query.get_or_404(quiz_id)
-    # Vérifier que l'utilisateur est bien le créateur du quiz
     if quiz.creator_id != current_user.id:
         flash("Vous n'êtes pas autorisé à modifier ce quiz.", "danger")
         return redirect(url_for("authentication.dashboard"))
@@ -186,17 +185,16 @@ def update_quiz(quiz_id):
     # Mettre à jour le titre du quiz
     quiz.title = request.form.get("title", "").strip()
 
-    # Supprimer les choix marqués pour suppression
-    removed_choices = request.form.getlist("remove_choice[]")
-    for choice_id in removed_choices:
-        if choice_id.isdigit():
-            Answer.query.filter_by(id=int(choice_id)).delete()
+    # Initialiser le dictionnaire pour stocker les nouveaux choix des nouvelles questions
+    new_questions_choices = {}
 
     # Supprimer les questions marquées pour suppression
-    removed_questions = request.form.getlist("remove_question[]")
+    removed_questions = request.form.get("remove_question[]", "").split(",")
     for question_id in removed_questions:
         if question_id.isdigit():
-            Question.query.filter_by(id=int(question_id)).delete()
+            question_to_delete = Question.query.get(int(question_id))
+            if question_to_delete and question_to_delete.quiz_id == quiz.id:
+                db.session.delete(question_to_delete)
 
     # Mise à jour des questions existantes
     for question in quiz.questions:
@@ -204,50 +202,61 @@ def update_quiz(quiz_id):
         if new_text:
             question.text = new_text
 
+        # Mise à jour des choix existants
         for choice in question.answers:
-            choice_text = request.form.get(
+            choice_text_existing = request.form.get(
                 f"choice_{question.id}_{choice.id}", ""
             ).strip()
-            choice_is_correct = (
-                request.form.get(f"correct_{question.id}_{choice.id}") == "on"
-            )
-
-            if choice_text:
-                choice.text = choice_text
-                choice.is_correct = choice_is_correct
+            if choice_text_existing:
+                choice.text = choice_text_existing
 
     # Ajout de nouvelles questions
-    new_questions = []
+    new_questions = {}
     for key, value in request.form.items():
         if key.startswith("new_question_") and value.strip():
             question_text = value.strip()
             new_question = Question(text=question_text, quiz_id=quiz.id)
             db.session.add(new_question)
-            new_questions.append(new_question)
+            db.session.commit()
+            new_questions[int(key.split("_")[2])] = new_question.id
 
-    db.session.commit()  # Commit des nouvelles questions pour obtenir leurs ID
+    # Ajout des nouveaux choix aux questions existantes
+    for key, value in request.form.items():
+        if key.startswith("new_choice_"):
+            parts = key.split("_")
+            # Si le choix appartient à une question existante
+            if len(parts) == 4 and parts[2].isdigit() and parts[3].isdigit():
+                question_id = int(parts[2])
+                choice_text = value.strip()
 
-    # Ajout des choix pour les nouvelles questions
-    for new_question in new_questions:
-        question_id = (
-            new_question.id
-        )  # Maintenant que la question est commitée, elle a un ID
+                if choice_text:
+                    new_choice = Answer(text=choice_text, question_id=question_id)
+                    db.session.add(new_choice)
 
-        for choice_index in range(4):  # Maximum de 4 choix
-            choice_text = request.form.get(
-                f"new_choice_{question_id}_{choice_index}", ""
-            ).strip()
-            choice_is_correct = (
-                request.form.get(f"new_correct_{question_id}_{choice_index}") == "on"
-            )
+            # Si le choix appartient à une nouvelle question
+            elif (
+                len(parts) == 5
+                and parts[2] == "new"
+                and parts[3].isdigit()
+                and parts[4].isdigit()
+            ):
+                question_idx = int(parts[3])
+                choice_text = value.strip()
+                if choice_text:
+                    if question_idx not in new_questions_choices:
+                        new_questions_choices[question_idx] = []
 
-            if choice_text:
-                new_choice = Answer(
-                    text=choice_text,
-                    is_correct=choice_is_correct,
-                    question_id=question_id,
-                )
-                db.session.add(new_choice)
+                    new_questions_choices[question_idx].append(choice_text)
+
+    db.session.commit()
+
+    # Associer les choix aux nouvelles questions
+    for question_idx, choices in new_questions_choices.items():
+        new_question_id = new_questions[question_idx]
+
+        for choice_text in choices:
+            new_choice = Answer(text=choice_text, question_id=new_question_id)
+            db.session.add(new_choice)
 
     db.session.commit()
 
