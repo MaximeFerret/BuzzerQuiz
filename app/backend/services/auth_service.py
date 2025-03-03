@@ -3,14 +3,16 @@ from datetime import datetime, timedelta, timezone
 from backend.dao.auth_dao import UserDAO
 from backend.models.db import db
 from flask_login import login_user
-from werkzeug.security import check_password_hash, generate_password_hash
+from flask_bcrypt import Bcrypt
+
+bcrypt = Bcrypt()
 
 
 class AuthService:
     @staticmethod
     def create_user(username, email, password):
         """创建用户并保存"""
-        password_hash = generate_password_hash(password)
+        password_hash = bcrypt.generate_password_hash(password)
         new_user = UserDAO.create_user(username, email, password_hash)
         return new_user
 
@@ -18,11 +20,9 @@ class AuthService:
     def authenticate_user(email, password):
         """认证用户"""
         user = UserDAO.get_user_by_email(email)
-        if not user:
-            return {"error": "User not found"}, 404
 
-        if not check_password_hash(user.password_hash, password):
-            return {"error": "Incorrect password"}, 401
+        if not user or not bcrypt.check_password_hash(user.password_hash, password):
+            return None
 
         return user
     
