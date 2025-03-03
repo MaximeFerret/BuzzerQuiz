@@ -30,6 +30,11 @@ class AuthService:
     def get_user_by_email(email):
         """Trouver l'utilisateur via email"""
         return UserDAO.get_user_by_email(email)
+    
+    @staticmethod
+    def get_user_by_username(id):
+        """Trouver l'utilisateur via identifiant"""
+        return UserDAO.get_user_by_username(id)
 
     @staticmethod
     def set_user_session(user_id):

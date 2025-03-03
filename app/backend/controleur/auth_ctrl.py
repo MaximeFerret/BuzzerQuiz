@@ -23,6 +23,10 @@ def register():
         if AuthService.get_user_by_email(email):
             flash("Cet email est déjà utilisé.", "danger")
             return redirect(url_for("authentication.register"))
+        
+        if AuthService.get_user_by_username(username):
+            flash("Cet username est déjà utilisé.", "danger")
+            return redirect(url_for("authentication.register"))
 
         new_user = AuthService.create_user(username, email, password)
         flash("Compte créé avec succès ! Connectez-vous.", "success")

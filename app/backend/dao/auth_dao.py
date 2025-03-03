@@ -25,9 +25,9 @@ class UserDAO:
         return User.query.filter_by(email=email).first()
 
     @staticmethod
-    def get_user_by_id(user_id):
-        """Obtenir un user par id"""
-        return User.query.get(user_id)
+    def get_user_by_username(username):
+        """Obtenir un user par username"""
+        return User.query.filter_by(username=username).first()
 
     @staticmethod
     def delete_user(user_id):
