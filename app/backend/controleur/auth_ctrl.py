@@ -1,7 +1,7 @@
 from flask import (Blueprint, current_app, flash, redirect, render_template,
                    request, session, url_for)
 from flask_login import current_user, login_required, login_user, logout_user
-from backend.models import db
+from backend.models.db import db
 from backend.models.user import User
 from backend.services.auth_service import AuthService
 from datetime import datetime, timezone, timedelta

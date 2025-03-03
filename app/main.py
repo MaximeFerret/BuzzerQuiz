@@ -6,7 +6,8 @@ from flask_migrate import Migrate
 from flask_socketio import SocketIO
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
-from frontend.blueprints.auth.auth import auth_bp
+from backend.controleur.auth_ctrl import auth_bp
+#from frontend.blueprints.auth.auth import auth_bp
 from frontend.blueprints.buzzer.buzzer import buzzer_bp
 from frontend.blueprints.quiz.quiz import quiz_bp
 

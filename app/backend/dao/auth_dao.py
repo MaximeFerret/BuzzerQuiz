@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from backend.models import db
+from backend.models.db import db
 from backend.models.user import User
 
 

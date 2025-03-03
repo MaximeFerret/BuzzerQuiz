@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
 from backend.dao.auth_dao import UserDAO
-from backend.models import db
+from backend.models.db import db
 from flask_login import login_user
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -25,6 +25,11 @@ class AuthService:
             return {"error": "Incorrect password"}, 401
 
         return user
+    
+    @staticmethod
+    def get_user_by_email(email):
+        """根据邮箱查找用户"""
+        return UserDAO.get_user_by_email(email)
 
     @staticmethod
     def set_user_session(user_id):
