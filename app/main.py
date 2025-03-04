@@ -9,7 +9,8 @@ from flask_wtf.csrf import CSRFProtect
 from backend.controleur.auth_ctrl import auth_bp
 #from frontend.blueprints.auth.auth import auth_bp
 from frontend.blueprints.buzzer.buzzer import buzzer_bp
-from frontend.blueprints.quiz.quiz import quiz_bp
+from backend.controleur.quiz_ctrl import quiz_bp
+#from frontend.blueprints.quiz.quiz import quiz_bp
 
 app = Flask(__name__, template_folder="frontend/templates")
 app.static_folder = "frontend/static"

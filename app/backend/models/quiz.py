@@ -1,6 +1,5 @@
 from backend.models.db import db
-from flask_sqlalchemy import SQLAlchemy
-
+#from flask_sqlalchemy import SQLAlchemy
 
 class Quiz(db.Model):
     id = db.Column(db.Integer, primary_key=True)
