@@ -6,7 +6,7 @@ from backend.models.user import User
 from backend.services.auth_service import AuthService
 from datetime import datetime, timezone, timedelta
 
-auth_bp = Blueprint("authentication", __name__, template_folder="../../frontend/blueprints/auth/templates")
+auth_bp = Blueprint("authentication", __name__, template_folder="../../frontend/templates/templates_auth")
 
 @auth_bp.route("/register", methods=["GET", "POST"])
 def register():

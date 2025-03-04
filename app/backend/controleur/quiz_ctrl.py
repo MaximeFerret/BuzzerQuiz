@@ -5,7 +5,7 @@ from backend.services.quiz_service import QuizService
 from backend.models.db import db
 from backend.models.quiz import Answer, Question, Quiz
 
-quiz_bp = Blueprint("quiz", __name__, template_folder="../../frontend/blueprints/quiz/templates")
+quiz_bp = Blueprint("quiz", __name__, template_folder="../../frontend/templates/templates_quiz")
 
 def check_session():
     if not session.get("is_user") or "user_last_active" not in session:
