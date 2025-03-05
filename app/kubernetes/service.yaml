@@ -10,4 +10,5 @@ spec:
     - port: 80
       # PORT DU CONTENEUR, ET DONC DE VOTRE SERVEUR
       targetPort: 5000
+  type: LoadBalancer
 
