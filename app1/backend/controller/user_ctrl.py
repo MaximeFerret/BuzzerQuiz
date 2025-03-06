@@ -6,7 +6,7 @@ from backend.business_object.user import User
 from backend.service.user_service import UserService
 from datetime import datetime, timezone, timedelta
 
-auth_bp = Blueprint("authentication", __name__, template_folder="../../frontend/templates")
+auth_bp = Blueprint("authentication", __name__, template_folder="../../frontend/user")
 
 
 @auth_bp.route("/register", methods=["GET", "POST"])
@@ -51,21 +51,6 @@ def login():
             flash("Email ou mot de passe incorrect.", "danger")
             return redirect(url_for("authentication.login"))
     return render_template("login.html")
-
-
-#@auth_bp.route("/dashboard")
-#@login_required
-#def dashboard():
-#    if not session.get("is_user"):
-#        return redirect(url_for("authentication.login"))
-#
-#    last_active = session.get("user_last_active")
-#    if UserService.check_session_expiry(last_active):
-#        flash("Session expirée. Veuillez vous reconnecter.", "warning")
-#        return redirect(url_for("authentication.login"))
-#
-#    session["user_last_active"] = datetime.now(timezone.utc)
-#    return render_template("dashboard.html")
 
 
 @auth_bp.route("/logout")

@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from ..service.quiz_service import QuizService
 from ..business_object.db import db
 
-quiz_bp = Blueprint('quiz', __name__, template_folder="../../frontend/templates")
+quiz_bp = Blueprint('quiz', __name__, template_folder="../../frontend/quiz")
 
 # Stockage des joueurs et de leurs scores en mémoire
 players = {}
