@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    {% for user in users %}
+        <li>{{ user.username }} - {{ user.email }}
+            <form method="POST" action="{{ url_for('authentication.delete_user', user_id=user.id) }}">
+                <button type="submit" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')">Supprimer</button>
+            </form>
+        </li>
+    {% endfor %}
+</ul>
+
+<a href="{{ url_for('authentication.admin_logout') }}">Déconnexion</a>
+
+{% endblock %}
