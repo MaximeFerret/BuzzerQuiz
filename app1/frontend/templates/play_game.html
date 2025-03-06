@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jouer - BuzzerQuiz</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #46178f;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+        .buzzer {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background-color: #e21b3c;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.3s;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            margin: 20px;
+        }
+        .buzzer:hover {
+            transform: scale(1.05);
+            background-color: #ff1f47;
+        }
+        .buzzer:active {
+            transform: scale(0.95);
+        }
+        .buzzer.disabled {
+            background-color: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .status {
+            font-size: 24px;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .score {
+            font-size: 20px;
+            margin: 20px 0;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .game-over {
+            display: none;
+            text-align: center;
+        }
+        .final-scores {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            max-width: 600px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="status" id="status">En attente du début de la partie...</div>
+        <button class="buzzer" id="buzzer" onclick="buzz()">BUZZER</button>
+        <div class="score" id="score">Score: 0</div>
+        <div class="game-over" id="gameOver">
+            <h2>Partie terminée!</h2>
+            <div class="final-scores" id="finalScores"></div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const gameCode = '{{ code }}';
+        let username = localStorage.getItem('username');
+        let canBuzz = true;
+
+        // Rejoindre la partie
+        if (!username) {
+            username = prompt('Entrez votre pseudo:');
+            if (username) {
+                localStorage.setItem('username', username);
+            } else {
+                window.location.href = '/';
+            }
+        }
+
+        socket.emit('join', {
+            username: username,
+            room: gameCode
+        });
+
+        function buzz() {
+            if (!canBuzz) return;
+
+            socket.emit('buzz', {
+                username: username,
+                room: gameCode
+            });
+
+            document.getElementById('buzzer').classList.add('disabled');
+            document.getElementById('status').textContent = 'Vous avez buzzé!';
+            canBuzz = false;
+        }
+
+        // Gestion des événements du jeu
+        socket.on('game_started', function(data) {
+            document.getElementById('status').textContent = 'La partie commence!';
+            enableBuzzer();
+        });
+
+        socket.on('new_question', function() {
+            document.getElementById('status').textContent = 'Nouvelle question!';
+            enableBuzzer();
+        });
+
+        socket.on('correct_answer', function(data) {
+            if (data.username === username) {
+                document.getElementById('status').textContent = 'Bonne réponse!';
+                document.getElementById('score').textContent = `Score: ${data.score}`;
+            } else {
+                document.getElementById('status').textContent = `${data.username} a trouvé la bonne réponse!`;
+            }
+            console.log(`Score update received for ${data.username}: ${data.score}`);
+        });
+
+        socket.on('wrong_answer', function(data) {
+            if (data.username === username) {
+                document.getElementById('status').textContent = 'Mauvaise réponse!';
+                document.getElementById('buzzer').classList.add('disabled');
+            }
+        });
+
+        socket.on('can_buzz', function() {
+            enableBuzzer();
+        });
+
+        socket.on('game_over', function(data) {
+            document.getElementById('buzzer').style.display = 'none';
+            document.getElementById('status').textContent = 'Partie terminée!';
+
+            const gameOver = document.getElementById('gameOver');
+            const finalScores = document.getElementById('finalScores');
+            gameOver.style.display = 'block';
+
+            const sortedPlayers = Object.entries(data.scores)
+                .sort(([,a], [,b]) => b.score - a.score);
+
+            finalScores.innerHTML = '<h2>Scores finaux</h2>';
+            sortedPlayers.forEach(([player, data]) => {
+                const scoreDiv = document.createElement('div');
+                scoreDiv.className = 'player-score';
+                scoreDiv.innerHTML = `
+                    <span>${player}</span>
+                    <span>${data.score} points</span>
+                `;
+                finalScores.appendChild(scoreDiv);
+            });
+
+            // Ajouter un bouton pour retourner à l'accueil
+            const returnButton = document.createElement('a');
+            returnButton.href = '/';
+            returnButton.className = 'return-home';
+            returnButton.textContent = 'Retour à l\'accueil';
+            gameOver.appendChild(returnButton);
+        });
+
+        socket.on('kicked', function() {
+            alert('Vous avez été exclu de la partie');
+            window.location.href = '/';
+        });
+
+        function enableBuzzer() {
+            canBuzz = true;
+            document.getElementById('buzzer').classList.remove('disabled');
+        }
+    </script>
+</body>
+</html>

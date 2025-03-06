@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rejoindre la partie - BuzzerQuiz</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #46178f;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            text-align: center;
+        }
+        .logo {
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            color: white;
+        }
+        .join-form {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            color: #333;
+            margin-bottom: 5px;
+            text-align: left;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .form-group input:focus {
+            border-color: #46178f;
+            outline: none;
+        }
+        .join-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s;
+        }
+        .join-button:hover {
+            background: #388E3C;
+        }
+        .game-pin {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .waiting-screen {
+            display: none;
+            text-align: center;
+        }
+        .waiting-text {
+            font-size: 1.5em;
+            margin: 20px 0;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #46178f;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">BuzzerQuiz</div>
+        <div class="join-form" id="joinForm">
+            <div class="game-pin">Code de la partie: {{ code }}</div>
+            <div class="form-group">
+                <label for="username">Votre pseudo</label>
+                <input type="text" id="username" placeholder="Entrez votre pseudo" required>
+            </div>
+            <button class="join-button" onclick="joinGame()">Rejoindre</button>
+        </div>
+        <div class="waiting-screen" id="waitingScreen">
+            <div class="waiting-text">En attente du début de la partie...</div>
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const gameCode = '{{ code }}';
+
+        function joinGame() {
+            const username = document.getElementById('username').value;
+            if (!username) {
+                alert('Veuillez entrer un pseudo');
+                return;
+            }
+
+            socket.emit('join', {
+                username: username,
+                room: gameCode
+            });
+
+            // Cacher le formulaire et montrer l'écran d'attente
+            document.getElementById('joinForm').style.display = 'none';
+            document.getElementById('waitingScreen').style.display = 'block';
+        }
+
+        socket.on('error', function(data) {
+            alert(data.msg);
+            document.getElementById('joinForm').style.display = 'block';
+            document.getElementById('waitingScreen').style.display = 'none';
+        });
+
+        socket.on('game_started', function(data) {
+            // Rediriger vers la page de jeu
+            window.location.href = '/quiz/play/' + gameCode;
+        });
+    </script>
+</body>
+</html>

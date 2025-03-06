@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salle d'attente - BuzzerQuiz</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #46178f;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        .header {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .control-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .join-info {
+            background: white;
+            padding: 20px 40px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 40px 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .join-text {
+            color: #333;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        .game-pin {
+            color: #333;
+            font-size: 3em;
+            font-weight: bold;
+            font-family: monospace;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+        }
+        #qrcode {
+            margin: 20px auto;
+            padding: 10px;
+            background: white;
+            border-radius: 10px;
+            display: inline-block;
+        }
+        .players-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+            margin-top: 40px;
+        }
+        .player-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2em;
+            position: relative;
+        }
+        .kick-button {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .kick-button:hover {
+            background-color: #d32f2f;
+        }
+        .start-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 40px;
+            transition: background 0.3s;
+        }
+        .start-button:hover {
+            background: #388E3C;
+        }
+        .player-count {
+            font-size: 1.5em;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="control-btn" onclick="window.location.href='{{ url_for('quiz.dashboard') }}'">
+                <i class="fas fa-arrow-left"></i> Retour
+            </button>
+            <button class="control-btn" id="toggleSound">
+                <i class="fas fa-volume-up"></i>
+            </button>
+        </div>
+
+        <div class="join-info">
+            <div class="join-text">Scannez le QR code ou entrez le code pour rejoindre</div>
+            <div class="game-pin">{{ quiz.code }}</div>
+            <div id="qrcode"></div>
+        </div>
+
+        <div class="player-count">
+            <span id="playerCount">0</span> joueurs
+        </div>
+
+        <div class="players-list" id="playersList">
+            <!-- Les joueurs seront ajoutés ici dynamiquement -->
+        </div>
+
+        <button class="start-button" onclick="startGame('{{ quiz.code }}')">Commencer</button>
+    </div>
+
+    <script src="https://kit.fontawesome.com/your-font-awesome-kit.js"></script>
+    <script>
+        const socket = io();
+        let players = [];
+        const gameCode = '{{ quiz.code }}';
+
+        // Générer le QR code
+        const joinUrl = window.location.origin + '/quiz/join/' + gameCode;
+        new QRCode(document.getElementById("qrcode"), {
+            text: joinUrl,
+            width: 128,
+            height: 128,
+            colorDark : "#000000",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H
+        });
+
+        // L'hôte rejoint la salle dès le chargement de la page
+        socket.emit('host_join', { room: gameCode });
+
+        socket.on('player_joined', function(data) {
+            console.log('Player joined:', data.username);  // Debug log
+            if (!players.includes(data.username)) {
+                players.push(data.username);
+                updatePlayersList();
+            }
+        });
+
+        socket.on('status', function(data) {
+            console.log('Status:', data.msg);  // Debug log
+        });
+
+        function updatePlayersList() {
+            const playersList = document.getElementById('playersList');
+            const playerCount = document.getElementById('playerCount');
+
+            playersList.innerHTML = '';
+            playerCount.textContent = players.length;
+
+            players.forEach(player => {
+                const playerCard = document.createElement('div');
+                playerCard.className = 'player-card';
+                playerCard.textContent = player;
+
+                const kickButton = document.createElement('button');
+                kickButton.className = 'kick-button';
+                kickButton.innerHTML = '×';
+                kickButton.onclick = () => kickPlayer(player);
+                playerCard.appendChild(kickButton);
+
+                playersList.appendChild(playerCard);
+            });
+        }
+
+        function kickPlayer(username) {
+            if (confirm(`Voulez-vous vraiment exclure ${username} ?`)) {
+                socket.emit('kick_player', {
+                    room: gameCode,
+                    username: username
+                });
+                players = players.filter(p => p !== username);
+                updatePlayersList();
+            }
+        }
+
+        function startGame(code) {
+            if (players.length === 0) {
+                alert('Attendez qu\'au moins un joueur soit connecté avant de démarrer la partie');
+                return;
+            }
+
+            fetch('/quiz/start_quiz', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ code: code })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    socket.emit('start_game', { room: code });
+                    window.location.href = '/quiz/quiz/' + code;
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Une erreur est survenue lors du démarrage du quiz');
+            });
+        }
+
+        // Gestion du son
+        let soundEnabled = true;
+        document.getElementById('toggleSound').addEventListener('click', function() {
+            soundEnabled = !soundEnabled;
+            this.innerHTML = soundEnabled ? '<i class="fas fa-volume-up"></i>' : '<i class="fas fa-volume-mute"></i>';
+        });
+    </script>
+</body>
+</html>
