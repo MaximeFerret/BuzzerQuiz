@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modifier le quiz - Kahoot! Clone</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #46178f;
+            color: white;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .welcome {
+            font-size: 24px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            color: white;
+        }
+        .btn-primary {
+            background-color: #4CAF50;
+        }
+        .btn-primary:hover {
+            background-color: #388E3C;
+        }
+        .btn-secondary {
+            background-color: #2196F3;
+        }
+        .btn-secondary:hover {
+            background-color: #1976D2;
+        }
+        .btn-danger {
+            background-color: #f44336;
+            margin-left: 10px;
+        }
+        .btn-danger:hover {
+            background-color: #d32f2f;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .question-container {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            position: relative;
+        }
+        .question-title {
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        .options-container {
+            margin-left: 20px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .option-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .option-group input[type="radio"] {
+            width: auto;
+        }
+        .option-group input[type="text"] {
+            flex: 1;
+        }
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+        .flash-message {
+            padding: 10px;
+            background-color: rgba(255, 0, 0, 0.2);
+            color: #ff6b6b;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .quiz-info {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .quiz-code {
+            font-family: monospace;
+            font-size: 18px;
+            color: #4CAF50;
+            margin-top: 5px;
+        }
+        .delete-question {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .delete-question:hover {
+            background-color: #d32f2f;
+        }
+        #add-question {
+            margin-bottom: 20px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #add-question:hover {
+            background-color: #1976D2;
+        }
+        .choices-toggle {
+            margin: 10px 0;
+        }
+        .error-message {
+            color: #ff6b6b;
+            margin-top: 5px;
+            font-size: 14px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="welcome">Modifier le quiz</div>
+            <div>
+                <a href="{{ url_for('quiz.dashboard') }}" class="btn btn-secondary">Retour au tableau de bord</a>
+                <form action="{{ url_for('quiz.delete_quiz', quiz_id=quiz.id) }}" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce quiz ?')">
+                        Supprimer le quiz
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="quiz-info">
+            <div class="quiz-code">Code du quiz : {{ quiz.code }}</div>
+        </div>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for message in messages %}
+                        <div class="flash-message">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('quiz.edit_quiz', quiz_id=quiz.id) }}" id="quiz-form" onsubmit="return validateForm()">
+            
+            <div class="form-group">
+                <label for="title">Titre du quiz</label>
+                <input type="text" id="title" name="title" value="{{ quiz.title }}" required>
+            </div>
+
+            <div id="questions-container">
+                {% for question in questions %}
+                <div class="question-container">
+                    {% set question_index = loop.index %}
+                    <button type="button" class="delete-question" onclick="deleteQuestion(this)">Supprimer</button>
+                    <div class="question-title">Question {{ question_index }}</div>
+                    <div class="form-group">
+                        <label for="question{{ question_index }}">Question</label>
+                        <input type="text" id="question{{ question_index }}" name="question{{ question_index }}"
+                               value="{{ question.question_text }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="has_choices{{ question_index }}" name="has_choices{{ question_index }}"
+                                   {% if question.has_choices %}checked{% endif %}
+                                   onchange="toggleOptions({{ question_index }})">
+                            Cette question a des choix de réponses
+                        </label>
+                    </div>
+                    <div id="options_container{{ question_index }}" class="options-container" style="{% if not question.has_choices %}display: none;{% endif %}">
+                        {% for j in range(1, 5) %}
+                        {% if j <= 2 or question|attr('option' ~ j) %}
+                        <div class="option-group">
+                            <div class="radio-group">
+                                <input type="radio" id="correct{{ question_index }}_{{ j }}"
+                                       name="correct_answer_{{ question_index }}" value="{{ j }}"
+                                       {% if question.has_choices and question.correct_answer == j %}checked{% endif %}>
+                                <label for="correct{{ question_index }}_{{ j }}">Réponse correcte</label>
+                            </div>
+                            <input type="text" id="option{{ j }}_{{ question_index }}"
+                                   name="option{{ j }}_{{ question_index }}"
+                                   value="{{ question|attr('option' ~ j) }}"
+                                   placeholder="Option {{ j }}" required>
+                            {% if j > 2 %}
+                            <button type="button" class="btn btn-danger" onclick="deleteOption(this)">×</button>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    <div class="error-message">Il faut au moins 2 choix de réponses si vous activez les choix.</div>
+                    <button type="button" class="btn btn-secondary add-option" onclick="addOption(this)" style="margin-top: 10px; display: none;">
+                        Ajouter une option
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+
+            <button type="button" id="add-question" onclick="addQuestion()">Ajouter une question</button>
+            <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+        </form>
+    </div>
+
+    <script>
+        let questionCount = {{ questions|length }};
+
+        function addQuestion() {
+            questionCount++;
+            const container = document.getElementById('questions-container');
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'question-container';
+            questionDiv.innerHTML = `
+                <button type="button" class="delete-question" onclick="deleteQuestion(this)">Supprimer</button>
+                <div class="question-title">Question ${questionCount}</div>
+                <div class="form-group">
+                    <label for="question${questionCount}">Question</label>
+                    <input type="text" id="question${questionCount}" name="question${questionCount}" required>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="has_choices${questionCount}" name="has_choices${questionCount}"
+                               onchange="toggleOptions(${questionCount})">
+                        Cette question a des choix de réponses
+                    </label>
+                </div>
+                <div id="options_container${questionCount}" class="options-container" style="display: none;">
+                </div>
+                <div class="error-message">Il faut au moins 2 choix de réponses si vous activez les choix.</div>
+                <button type="button" class="btn btn-secondary add-option" onclick="addOption(this)" style="margin-top: 10px; display: none;">
+                    Ajouter une option
+                </button>
+            `;
+            container.appendChild(questionDiv);
+            renumberQuestions();
+        }
+
+        function deleteQuestion(button) {
+            if (document.getElementsByClassName('question-container').length > 1) {
+                button.closest('.question-container').remove();
+                renumberQuestions();
+            } else {
+                alert('Le quiz doit contenir au moins une question');
+            }
+        }
+
+        function addOption(btn) {
+            const questionBlock = btn.closest('.question-container');
+            const optionsContainer = questionBlock.querySelector('.options-container');
+
+            // Vérifier si on a déjà 4 options
+            if (optionsContainer.children.length >= 4) {
+                return;
+            }
+
+            const optionCount = optionsContainer.children.length + 1;
+            const questionNumber = questionBlock.querySelector('input[name^="question"]').name.match(/\d+/)[0];
+            const optionDiv = document.createElement('div');
+            optionDiv.className = 'option-group';
+
+            optionDiv.innerHTML = `
+                <div class="radio-group">
+                    <input type="radio" id="correct${questionNumber}_${optionCount}"
+                           name="correct_answer_${questionNumber}" value="${optionCount}">
+                    <label for="correct${questionNumber}_${optionCount}">Réponse correcte</label>
+                </div>
+                <input type="text" id="option${optionCount}_${questionNumber}"
+                       name="option${optionCount}_${questionNumber}"
+                       placeholder="Option ${optionCount}" required>
+                ${optionCount > 2 ? '<button type="button" class="btn btn-danger" onclick="deleteOption(this)">×</button>' : ''}
+            `;
+
+            optionsContainer.appendChild(optionDiv);
+            updateDeleteButtons(optionsContainer);
+
+            // Si c'est la première option ajoutée, la sélectionner par défaut
+            if (optionsContainer.children.length === 1) {
+                optionDiv.querySelector('input[type="radio"]').checked = true;
+            }
+        }
+
+        function updateDeleteButtons(optionsContainer) {
+            const deleteButtons = optionsContainer.querySelectorAll('.btn-danger');
+            deleteButtons.forEach(btn => {
+                btn.style.display = optionsContainer.children.length > 2 ? 'block' : 'none';
+            });
+        }
+
+        function deleteOption(btn) {
+            const optionBlock = btn.closest('.option-group');
+            const optionsContainer = optionBlock.parentElement;
+            const questionBlock = optionsContainer.closest('.question-container');
+
+            // Ne pas supprimer si on a seulement 2 options
+            if (optionsContainer.children.length <= 2) {
+                questionBlock.querySelector('.error-message').style.display = 'block';
+                return;
+            }
+
+            optionBlock.remove();
+            updateOptionNumbers(optionsContainer);
+            updateDeleteButtons(optionsContainer);
+            questionBlock.querySelector('.error-message').style.display = 'none';
+        }
+
+        function updateOptionNumbers(container) {
+            const questionId = container.closest('.question-container')
+                                     .querySelector('input[name^="question"]')
+                                     .name.match(/\d+/)[0];
+
+            Array.from(container.children).forEach((option, index) => {
+                const radio = option.querySelector('input[type="radio"]');
+                const optionInput = option.querySelector('input[type="text"]');
+                const newIndex = index + 1;
+
+                radio.id = `correct${questionId}_${newIndex}`;
+                radio.name = `correct_answer_${questionId}`;  // Assure que tous les radios d'une question ont le même nom
+                radio.value = newIndex;
+                option.querySelector('label').setAttribute('for', `correct${questionId}_${newIndex}`);
+
+                optionInput.id = `option${newIndex}_${questionId}`;
+                optionInput.name = `option${newIndex}_${questionId}`;
+                optionInput.placeholder = `Option ${newIndex}`;
+            });
+        }
+
+        function toggleOptions(questionNumber) {
+            const checkbox = document.getElementById(`has_choices${questionNumber}`);
+            const optionsContainer = document.getElementById(`options_container${questionNumber}`);
+            const addOptionButton = optionsContainer.nextElementSibling.nextElementSibling;
+            const errorMessage = optionsContainer.nextElementSibling;
+
+            if (checkbox.checked) {
+                optionsContainer.style.display = 'grid';
+                addOptionButton.style.display = 'block';
+
+                // Ne vider le conteneur que s'il est vide
+                if (optionsContainer.children.length === 0) {
+                    // Ajouter automatiquement 2 options
+                    addOption(addOptionButton);
+                    addOption(addOptionButton);
+
+                    // S'assurer que le premier bouton radio est sélectionné
+                    const firstRadio = optionsContainer.querySelector(`input[name="correct_answer_${questionNumber}"]`);
+                    if (firstRadio) {
+                        firstRadio.checked = true;
+                    }
+                }
+            } else {
+                optionsContainer.style.display = 'none';
+                addOptionButton.style.display = 'none';
+                errorMessage.style.display = 'none';
+            }
+        }
+
+        function renumberQuestions() {
+            const questions = document.getElementsByClassName('question-container');
+            Array.from(questions).forEach((question, index) => {
+                const questionTitle = question.querySelector('.question-title');
+                questionTitle.textContent = `Question ${index + 1}`;
+            });
+        }
+
+        function validateForm() {
+            let isValid = true;
+            const questions = document.querySelectorAll('.question-container');
+
+            questions.forEach((questionBlock, index) => {
+                const hasChoices = questionBlock.querySelector('input[type="checkbox"]').checked;
+                const errorMessage = questionBlock.querySelector('.error-message');
+                errorMessage.style.display = 'none';
+
+                if (hasChoices) {
+                    const optionsContainer = questionBlock.querySelector('.options-container');
+                    const options = optionsContainer.querySelectorAll('.option-group');
+                    const radios = optionsContainer.querySelectorAll('input[type="radio"]');
+                    const textInputs = optionsContainer.querySelectorAll('input[type="text"]');
+
+                    // Vérifier le nombre minimum d'options
+                    if (options.length < 2) {
+                        errorMessage.textContent = 'Il faut au moins 2 choix de réponses si vous activez les choix.';
+                        errorMessage.style.display = 'block';
+                        isValid = false;
+                    }
+
+                    // Vérifier qu'une réponse correcte est sélectionnée
+                    const hasCorrectAnswer = Array.from(radios).some(radio => radio.checked);
+                    if (!hasCorrectAnswer) {
+                        errorMessage.textContent = 'Veuillez sélectionner une réponse correcte.';
+                        errorMessage.style.display = 'block';
+                        isValid = false;
+                    }
+
+                    // Vérifier que tous les champs texte sont remplis
+                    const hasEmptyOptions = Array.from(textInputs).some(input => !input.value.trim());
+                    if (hasEmptyOptions) {
+                        errorMessage.textContent = 'Veuillez remplir toutes les options.';
+                        errorMessage.style.display = 'block';
+                        isValid = false;
+                    }
+
+                    // Mettre à jour les numéros des options
+                    updateOptionNumbers(optionsContainer);
+                }
+            });
+
+            // Mettre à jour les numéros des questions si le formulaire est valide
+            if (isValid) {
+                renumberQuestions();
+            }
+
+            return isValid;
+        }
+
+        // Supprimer l'event listener existant et le remplacer par celui-ci
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('quiz-form').onsubmit = function(event) {
+                return validateForm();
+            };
+        });
+
+        // Initialiser l'état des options pour chaque question au chargement de la page
+        document.addEventListener('DOMContentLoaded', function() {
+            const questions = document.getElementsByClassName('question-container');
+            Array.from(questions).forEach((question, index) => {
+                const questionNumber = index + 1;
+                const checkbox = document.getElementById(`has_choices${questionNumber}`);
+                const optionsContainer = document.getElementById(`options_container${questionNumber}`);
+                const addOptionButton = optionsContainer.nextElementSibling.nextElementSibling;
+
+                if (checkbox.checked) {
+                    optionsContainer.style.display = 'grid';
+                    addOptionButton.style.display = 'block';
+
+                    // Mettre à jour les boutons de suppression
+                    updateDeleteButtons(optionsContainer);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

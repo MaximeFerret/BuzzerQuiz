@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gérer le Quiz - BuzzerQuiz</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #46178f;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .quiz-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        .question-container {
+            background: white;
+            color: #333;
+            padding: 30px;
+            border-radius: 10px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .question-text {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .option {
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+        }
+        .option:nth-child(1) { background-color: #e21b3c; }
+        .option:nth-child(2) { background-color: #1368ce; }
+        .option:nth-child(3) { background-color: #26890c; }
+        .option:nth-child(4) { background-color: #ffa602; }
+        .correct-answer {
+            border: 3px solid #4CAF50;
+        }
+        .players-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            width: 100%;
+            margin-top: 20px;
+        }
+        .player-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            position: relative;
+        }
+        .player-card.buzzed {
+            background: rgba(255, 215, 0, 0.3);
+            animation: pulse 1s infinite;
+        }
+        .player-card.correct {
+            background: rgba(76, 175, 80, 0.6);
+        }
+        .player-card.incorrect {
+            background: rgba(244, 67, 54, 0.3);
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .validation-buttons {
+            display: none;
+            position: absolute;
+            bottom: -40px;
+            left: 0;
+            right: 0;
+            gap: 10px;
+            justify-content: center;
+        }
+        .player-card.buzzed .validation-buttons {
+            display: flex;
+        }
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn-validate {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .btn-validate:hover {
+            background-color: #388E3C;
+        }
+        .btn-reject {
+            background-color: #f44336;
+            color: white;
+        }
+        .btn-reject:hover {
+            background-color: #d32f2f;
+        }
+        .btn-next {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            font-size: 18px;
+            margin-top: 40px;
+        }
+        .btn-next:hover {
+            background-color: #388E3C;
+        }
+        .btn-stop {
+            background-color: #f44336;
+            color: white;
+            padding: 15px 30px;
+            font-size: 18px;
+        }
+        .btn-stop:hover {
+            background-color: #d32f2f;
+        }
+        .game-over {
+            display: none;
+            text-align: center;
+            width: 100%;
+        }
+        .final-scores {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        .player-score {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .player-score:last-child {
+            border-bottom: none;
+        }
+        .question-counter {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+        .control-buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 20px;
+        }
+        .return-dashboard {
+            background-color: #2196F3;
+            color: white;
+            padding: 15px 30px;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .return-dashboard:hover {
+            background-color: #1976D2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{ quiz.title }}</h1>
+            <div>Code: {{ quiz.code }}</div>
+        </div>
+
+        <div class="quiz-info">
+            <div class="question-counter">
+                Question <span id="currentQuestionNum">1</span>/{{ questions|length }}
+            </div>
+        </div>
+
+        <div class="question-container">
+            <div class="question-text" id="questionText">{{ questions[0].question_text }}</div>
+            <div class="options-grid">
+                <div class="option">{{ questions[0].option1 }}</div>
+                <div class="option">{{ questions[0].option2 }}</div>
+                <div class="option">{{ questions[0].option3 }}</div>
+                <div class="option">{{ questions[0].option4 }}</div>
+            </div>
+        </div>
+
+        <div class="players-grid" id="playersGrid">
+            <!-- Les joueurs seront ajoutés ici dynamiquement -->
+        </div>
+
+        <div class="control-buttons">
+            <button class="btn btn-next" onclick="nextQuestion()">Question suivante</button>
+            <button class="btn btn-stop" onclick="stopQuiz()">Arrêter le quiz</button>
+        </div>
+
+        <div class="game-over" id="gameOver">
+            <h2>Quiz terminé!</h2>
+            <div class="final-scores" id="finalScores"></div>
+            <a href="{{ url_for('quiz.dashboard') }}" class="return-dashboard">Retour au tableau de bord</a>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const gameCode = '{{ quiz.code }}';
+        const totalQuestions = {{ questions|length }};
+        let currentQuestion = 1;
+        let players = new Map();
+        let currentBuzzer = null;
+
+        socket.emit('host_join', { room: gameCode });
+
+        socket.on('player_joined', function(data) {
+            if (!players.has(data.username)) {
+                players.set(data.username, { score: 0 });
+                updatePlayersGrid();
+            }
+        });
+
+        socket.on('buzz', function(data) {
+            if (currentBuzzer) return; // Ignorer si quelqu'un a déjà buzzé
+
+            currentBuzzer = data.username;
+            const playerCard = document.querySelector(`[data-username="${data.username}"]`);
+            if (playerCard) {
+                playerCard.classList.add('buzzed');
+            }
+        });
+
+        socket.on('new_question', function(data) {
+            // Mettre à jour le texte de la question
+            document.getElementById('questionText').textContent = data.question.question;
+
+            // Mettre à jour les options
+            const options = document.querySelectorAll('.option');
+            options.forEach((option, index) => {
+                option.textContent = data.question.options[index] || '';
+            });
+
+            // Mettre à jour la réponse correcte
+            options.forEach(option => option.classList.remove('correct-answer'));
+            options[data.question.correct].classList.add('correct-answer');
+
+            // Réinitialiser l'état des joueurs
+            document.querySelectorAll('.player-card').forEach(card => {
+                card.className = 'player-card';
+            });
+        });
+
+        socket.on('game_over', function(data) {
+            document.querySelector('.question-container').style.display = 'none';
+            document.querySelector('.control-buttons').style.display = 'none';
+            document.querySelector('.players-grid').style.display = 'none';
+
+            const gameOver = document.getElementById('gameOver');
+            const finalScores = document.getElementById('finalScores');
+            gameOver.style.display = 'block';
+
+            const sortedPlayers = Object.entries(data.scores)
+                .sort(([,a], [,b]) => b.score - a.score);
+
+            finalScores.innerHTML = '';
+            sortedPlayers.forEach(([player, data]) => {
+                const scoreDiv = document.createElement('div');
+                scoreDiv.className = 'player-score';
+                scoreDiv.innerHTML = `
+                    <span>${player}</span>
+                    <span>${data.score} points</span>
+                `;
+                finalScores.appendChild(scoreDiv);
+            });
+        });
+
+        function updatePlayersGrid() {
+            const grid = document.getElementById('playersGrid');
+            grid.innerHTML = '';
+
+            players.forEach((data, username) => {
+                const card = document.createElement('div');
+                card.className = 'player-card';
+                card.setAttribute('data-username', username);
+
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = username;
+                card.appendChild(nameSpan);
+
+                const validationButtons = document.createElement('div');
+                validationButtons.className = 'validation-buttons';
+                validationButtons.innerHTML = `
+                    <button class="btn btn-validate" onclick="validateAnswer('${username}')">✓</button>
+                    <button class="btn btn-reject" onclick="rejectAnswer('${username}')">✗</button>
+                `;
+                card.appendChild(validationButtons);
+
+                grid.appendChild(card);
+            });
+        }
+
+        function validateAnswer(username) {
+            socket.emit('correct_answer', {
+                username: username,
+                room: gameCode
+            });
+
+            const playerCard = document.querySelector(`[data-username="${username}"]`);
+            if (playerCard) {
+                playerCard.classList.remove('buzzed');
+                playerCard.classList.add('correct');
+            }
+
+            currentBuzzer = null;
+            nextQuestion();
+        }
+
+        function rejectAnswer(username) {
+            socket.emit('wrong_answer', {
+                username: username,
+                room: gameCode
+            });
+
+            const playerCard = document.querySelector(`[data-username="${username}"]`);
+            if (playerCard) {
+                playerCard.classList.remove('buzzed');
+                playerCard.classList.add('incorrect');
+            }
+
+            currentBuzzer = null;
+            socket.emit('can_buzz', { room: gameCode }); // Permettre aux autres de buzzer
+        }
+
+        function nextQuestion() {
+            if (currentQuestion >= totalQuestions) {
+                // Désactiver le quiz
+                fetch('/quiz/stop_quiz', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ code: gameCode })
+                })
+                .then(response => response.json())
+                .then(() => {
+                    // Émettre l'événement de fin de partie aux joueurs
+                    socket.emit('game_over', {
+                        room: gameCode,
+                        scores: Object.fromEntries(players)
+                    });
+                });
+                return;
+            }
+
+            currentQuestion++;
+            document.getElementById('currentQuestionNum').textContent = currentQuestion;
+
+            // Réinitialiser l'état des joueurs
+            document.querySelectorAll('.player-card').forEach(card => {
+                card.className = 'player-card';
+            });
+
+            currentBuzzer = null;
+            socket.emit('next_question', { room: gameCode });
+        }
+
+        function stopQuiz() {
+            fetch('/quiz/stop_quiz', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ code: gameCode })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '/quiz/dashboard';
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+
+        // Mettre en évidence la bonne réponse
+        document.querySelectorAll('.option')[{{ questions[0].correct_answer }}].classList.add('correct-answer');
+    </script>
+</body>
+</html>

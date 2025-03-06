@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de bord - Kahoot! Clone</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .welcome {
+            font-size: 24px;
+            color: #333;
+        }
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            color: white;
+        }
+        .btn-primary {
+            background-color: #46178f;
+        }
+        .btn-primary:hover {
+            background-color: #5a1fb3;
+        }
+        .btn-secondary {
+            background-color: #666;
+        }
+        .btn-secondary:hover {
+            background-color: #777;
+        }
+        .quizzes {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .quiz-card {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .quiz-title {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .quiz-code {
+            font-family: monospace;
+            font-size: 24px;
+            color: #46178f;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .quiz-status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        .status-active {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        .status-inactive {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        .quiz-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .quiz-actions .btn {
+            flex: 1;
+        }
+        .btn-edit {
+            background-color: #2196F3;
+        }
+        .btn-edit:hover {
+            background-color: #1976D2;
+        }
+        .btn-start {
+            background-color: #4CAF50;
+        }
+        .btn-start:hover {
+            background-color: #388E3C;
+        }
+        .btn-stop {
+            background-color: #f44336;
+        }
+        .btn-stop:hover {
+            background-color: #d32f2f;
+        }
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+        .flash-message {
+            padding: 10px;
+            background-color: #ffebee;
+            color: #c62828;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="welcome">
+                Bienvenue, {{ current_user.username }} !
+            </div>
+            <div class="actions">
+                {% if current_user.is_host %}
+                <a href="{{ url_for('quiz.create_quiz') }}" class="btn btn-primary">Créer un quiz</a>
+                {% endif %}
+                <a href="{{ url_for('authentication.logout') }}" class="btn btn-secondary">Déconnexion</a>
+            </div>
+        </div>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for message in messages %}
+                        <div class="flash-message">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% if current_user.is_host %}
+            <h2>Mes Quiz</h2>
+            <div class="quizzes">
+                {% for quiz in quizzes %}
+                <div class="quiz-card">
+                    <div class="quiz-title">{{ quiz.title }}</div>
+                    <div class="quiz-code">Code: {{ quiz.code }}</div>
+                    <div class="quiz-status {% if quiz.is_active %}status-active{% else %}status-inactive{% endif %}">
+                        {{ 'Actif' if quiz.is_active else 'Inactif' }}
+                    </div>
+                    <div class="quiz-actions">
+                        <a href="{{ url_for('quiz.edit_quiz', quiz_id=quiz.id) }}" class="btn btn-edit">Modifier</a>
+                        {% if quiz.is_active %}
+                        <a href="{{ url_for('quiz.waiting_room', code=quiz.code) }}" class="btn btn-start">Démarrer</a>
+                        <button onclick="stopQuiz('{{ quiz.code }}')" class="btn btn-stop">Désactiver</button>
+                        {% else %}
+                        <button onclick="reactivateQuiz('{{ quiz.code }}')" class="btn btn-start">Réactiver</button>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="welcome">
+                <h2>Bienvenue sur Kahoot! Clone</h2>
+                <p>Pour jouer, entrez le code de la partie sur la page d'accueil.</p>
+                <a href="{{ url_for('homepage') }}" class="btn btn-primary">Aller à la page d'accueil</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function startQuiz(code) {
+            fetch('/quiz/start_quiz', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ code: code })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+
+        function stopQuiz(code) {
+            if (confirm('Voulez-vous vraiment désactiver ce quiz ?')) {
+                fetch('/quiz/stop_quiz', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ code: code })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                    }
+                });
+            }
+        }
+
+        function reactivateQuiz(code) {
+            fetch('/quiz/reactivate_quiz', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ code: code })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = 'waiting_room/' + code;
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

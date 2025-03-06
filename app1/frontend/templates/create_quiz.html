@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Créer un Quiz - Kahoot! Clone</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #46178f;
+            color: white;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .question-block {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            position: relative;
+        }
+        .options-container {
+            margin-left: 20px;
+            display: none;
+        }
+        .option-block {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #388E3C;
+        }
+        .btn-secondary {
+            background-color: #2196F3;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #1976D2;
+        }
+        .btn-danger {
+            background-color: #f44336;
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #d32f2f;
+        }
+        .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        .radio-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .choices-toggle {
+            margin: 10px 0;
+        }
+        .error-message {
+            color: #ff6b6b;
+            margin-top: 5px;
+            font-size: 14px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Créer un nouveau Quiz</h1>
+            <button class="btn btn-secondary" onclick="window.location.href='{{ url_for('quiz.dashboard') }}'">Retour</button>
+        </div>
+
+        <form method="POST" action="{{ url_for('quiz.create_quiz') }}" onsubmit="return validateForm()">    
+            <div class="form-group">
+                <label for="title">Titre du Quiz</label>
+                <input type="text" id="title" name="title" required>
+            </div>
+
+            <div id="questions-container">
+                <!-- Les questions seront ajoutées ici dynamiquement -->
+            </div>
+
+            <button type="button" class="btn btn-secondary" onclick="addQuestion()" style="margin-right: 10px;">
+                Ajouter une question
+            </button>
+            <button type="submit" class="btn btn-primary">Créer le Quiz</button>
+        </form>
+    </div>
+
+    <template id="question-template">
+        <div class="question-block">
+            <button type="button" class="btn btn-danger delete-btn" onclick="deleteQuestion(this)">×</button>
+            <div class="form-group">
+                <label>Question</label>
+                <input type="text" name="questions[]" required>
+                <div class="choices-toggle">
+                    <label>
+                        <input type="checkbox" onchange="toggleChoices(this)"> Cette question a des choix de réponses
+                    </label>
+                </div>
+                <div class="error-message">Il faut au moins 2 choix de réponses si vous activez les choix.</div>
+            </div>
+            <div class="options-container">
+                <!-- Les options seront ajoutées ici dynamiquement -->
+            </div>
+            <button type="button" class="btn btn-secondary add-option" onclick="addOption(this)" style="margin-top: 10px; display: none;">
+                Ajouter une option
+            </button>
+        </div>
+    </template>
+
+    <template id="option-template">
+        <div class="option-block">
+            <div class="radio-group">
+                <input type="radio" name="correct_QUESTIONID" value="OPTIONID" required>
+                <label>Correcte</label>
+            </div>
+            <input type="text" name="options_QUESTIONID[]" required style="flex-grow: 1;">
+            <button type="button" class="btn btn-danger" onclick="deleteOption(this)">×</button>
+        </div>
+    </template>
+
+    <script>
+        let questionCounter = 0;
+
+        function addQuestion() {
+            questionCounter++;
+            const container = document.getElementById('questions-container');
+            const template = document.getElementById('question-template');
+            const questionBlock = template.content.cloneNode(true);
+
+            // Mettre à jour les noms des champs pour cette question
+            const inputs = questionBlock.querySelectorAll('input[type="text"]');
+            inputs.forEach(input => {
+                if (input.name === 'questions[]') {
+                    input.name = `question${questionCounter}`;
+                }
+            });
+
+            container.appendChild(questionBlock);
+        }
+
+        function deleteQuestion(btn) {
+            btn.closest('.question-block').remove();
+        }
+
+        function toggleChoices(checkbox) {
+            const questionBlock = checkbox.closest('.question-block');
+            const optionsContainer = questionBlock.querySelector('.options-container');
+            const addOptionBtn = questionBlock.querySelector('.add-option');
+            const errorMessage = questionBlock.querySelector('.error-message');
+
+            if (checkbox.checked) {
+                optionsContainer.style.display = 'block';
+                addOptionBtn.style.display = 'block';
+                // Ajouter automatiquement 2 options
+                if (optionsContainer.children.length < 2) {
+                    addOption(addOptionBtn);
+                    addOption(addOptionBtn);
+                }
+            } else {
+                optionsContainer.style.display = 'none';
+                addOptionBtn.style.display = 'none';
+                errorMessage.style.display = 'none';
+                // Supprimer toutes les options
+                while (optionsContainer.firstChild) {
+                    optionsContainer.removeChild(optionsContainer.firstChild);
+                }
+            }
+        }
+
+        function addOption(btn) {
+            const questionBlock = btn.closest('.question-block');
+            const optionsContainer = questionBlock.querySelector('.options-container');
+
+            // Vérifier si on a déjà 4 options
+            if (optionsContainer.children.length >= 4) {
+                return;
+            }
+
+            const template = document.getElementById('option-template');
+            const optionBlock = template.content.cloneNode(true);
+
+            const optionCount = optionsContainer.children.length + 1;
+            const questionId = questionBlock.querySelector('input[name^="question"]').name.match(/\d+/)[0];
+
+            // Mettre à jour les noms et valeurs des champs
+            const radio = optionBlock.querySelector('input[type="radio"]');
+            const optionInput = optionBlock.querySelector('input[type="text"]');
+
+            radio.name = `correct${questionId}`;
+            radio.value = optionCount;
+            optionInput.name = `option${optionCount}_${questionId}`;
+
+            optionsContainer.appendChild(optionBlock);
+            updateDeleteButtons(optionsContainer);
+        }
+
+        function deleteOption(btn) {
+            const optionBlock = btn.closest('.option-block');
+            const optionsContainer = optionBlock.parentElement;
+            const questionBlock = optionsContainer.closest('.question-block');
+
+            // Ne pas supprimer si on a seulement 2 options
+            if (optionsContainer.children.length <= 2) {
+                questionBlock.querySelector('.error-message').style.display = 'block';
+                return;
+            }
+
+            optionBlock.remove();
+            updateOptionNumbers(optionsContainer);
+            updateDeleteButtons(optionsContainer);
+            questionBlock.querySelector('.error-message').style.display = 'none';
+        }
+
+        function updateOptionNumbers(container) {
+            const questionId = container.closest('.question-block')
+                                     .querySelector('input[name^="question"]')
+                                     .name.match(/\d+/)[0];
+
+            Array.from(container.children).forEach((option, index) => {
+                const radio = option.querySelector('input[type="radio"]');
+                const optionInput = option.querySelector('input[type="text"]');
+
+                radio.value = index + 1;
+                optionInput.name = `option${index + 1}_${questionId}`;
+            });
+        }
+
+        function updateDeleteButtons(optionsContainer) {
+            const deleteButtons = optionsContainer.querySelectorAll('.btn-danger');
+            deleteButtons.forEach(btn => {
+                btn.style.display = optionsContainer.children.length > 2 ? 'block' : 'none';
+            });
+        }
+
+        function validateForm() {
+            let isValid = true;
+            const questions = document.querySelectorAll('.question-block');
+
+            questions.forEach(questionBlock => {
+                const hasChoices = questionBlock.querySelector('input[type="checkbox"]').checked;
+                if (hasChoices) {
+                    const optionsContainer = questionBlock.querySelector('.options-container');
+                    if (optionsContainer.children.length < 2) {
+                        const errorMessage = questionBlock.querySelector('.error-message');
+                        errorMessage.style.display = 'block';
+                        isValid = false;
+                    }
+                }
+            });
+
+            return isValid;
+        }
+
+        // Ajouter la première question automatiquement
+        window.addEventListener('load', function() {
+            addQuestion();
+        });
+    </script>
+</body>
+</html>
