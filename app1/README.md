@@ -1,6 +1,6 @@
-# Kahoot! Clone
+# BuzzerQuiz
 
-Une version simplifiée du jeu Kahoot! créée avec Python et Flask.
+Introduction du logiciel
 
 ## Prérequis
 
@@ -12,7 +12,7 @@ Une version simplifiée du jeu Kahoot! créée avec Python et Flask.
 1. Clonez ce dépôt :
 ```bash
 git clone [URL_DU_REPO]
-cd Kahoot
+cd app
 ```
 
 2. Installez les dépendances :
