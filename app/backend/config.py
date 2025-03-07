@@ -1,10 +1,6 @@
-import os
-
-
 class Config:
-    SECRET_KEY = os.environ.get("SECRET_KEY", "default_secret_key")
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
-        "SQLALCHEMY_DATABASE_URI", "sqlite:///buzzerquiz.db"
-    )
+    SECRET_KEY = "EnsaiBruz35170!"  # Change cette clé pour plus de sécurité
+    SQLALCHEMY_DATABASE_URI = "sqlite:///buzzerquiz.db"  # Base de données SQLite
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    ADMIN_SECRET_CODE = os.environ.get("ADMIN_SECRET_CODE", "admin123")
+    ADMIN_SECRET_CODE = "admin123"
+    # PERMANENT_SESSION_LIFETIME = 15 * 60

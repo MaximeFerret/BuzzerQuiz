@@ -1,42 +1,32 @@
-import logging
-import os
-
-from backend.controleur.auth_ctrl import auth_bp
-from backend.controleur.quiz_ctrl import quiz_bp
-from backend.models.db import db
-from backend.models.user import User
-# from frontend.blueprints.quiz.quiz import quiz_bp
-from dotenv import load_dotenv
+from backend.business_object.db import db
+from backend.business_object.user import User
 from flask import Flask, render_template
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_socketio import SocketIO
-from flask_sqlalchemy import SQLAlchemy
-from flask_wtf.csrf import CSRFProtect
-# from frontend.blueprints.auth.auth import auth_bp
-from frontend.blueprints.buzzer.buzzer import buzzer_bp
-
-dotenv_path = os.path.join(os.path.dirname(__file__), ".env")
-load_dotenv(dotenv_path=dotenv_path)
-logging.basicConfig(level=logging.DEBUG)
-logging.debug(f"SECRET_KEY: {os.getenv('SECRET_KEY')}")
-logging.debug(f"DATABASE URI: {os.getenv('SQLALCHEMY_DATABASE_URI')}")
+#from flask_wtf.csrf import CSRFProtect
+from backend.controller.user_ctrl import auth_bp
+from backend.controller.quiz_ctrl import quiz_bp
+from backend.utils.socketio_events import socketio
 
 
 app = Flask(__name__, template_folder="frontend/templates")
-app.static_folder = "frontend/static"
 app.config.from_object("backend.config.Config")
+socketio.init_app(app)
 
 db.init_app(app)
 migrate = Migrate(app, db)
+
+app.register_blueprint(auth_bp)
+app.register_blueprint(quiz_bp, url_prefix="/quiz")
 
 
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "authentication.login"
 
-csrf = CSRFProtect(app)
-socketio = SocketIO(app, cors_allowed_origins="*")
+#csrf = CSRFProtect(app)
+#socketio = SocketIO(app, cors_allowed_origins="*")
 
 # app.permanent_session_lifetime = app.config['PERMANENT_SESSION_LIFETIME']
 
@@ -45,12 +35,6 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-
-app.register_blueprint(auth_bp)
-app.register_blueprint(quiz_bp, url_prefix="/quiz")
-app.register_blueprint(buzzer_bp, url_prefix="/buzzer")
-
-
 @app.route("/")
 def homepage():
     return render_template("index.html")
@@ -58,5 +42,7 @@ def homepage():
 
 if __name__ == "__main__":
     with app.app_context():
+        #print("Flask URL Map:", app.url_map)  # 打印所有可用路由
+
         db.create_all()  # Crée la base de données si elle n'existe pas encore
-    socketio.run(app, host="0.0.0.0", debug=True, allow_unsafe_werkzeug=True)
+    socketio.run(app, host="0.0.0.0", debug=True)
