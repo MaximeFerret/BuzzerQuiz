@@ -1,6 +1,10 @@
+import sys
+import os
 import unittest
 from unittest.mock import patch, MagicMock
 from app.backend.service.quiz_service import QuizService
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                             '../../')))
 
 
 class TestQuizService(unittest.TestCase):

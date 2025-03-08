@@ -1,4 +1,4 @@
-from backend.business_object.db import db
+from ..business_object.db import db
 
 
 class Quiz(db.Model):

@@ -1,4 +1,4 @@
-from backend.business_object.db import db
+from ..business_object.db import db
 from flask_bcrypt import Bcrypt
 from flask_login import UserMixin
 
