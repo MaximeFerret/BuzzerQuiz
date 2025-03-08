@@ -1,5 +1,7 @@
 flask
+flask_bcrypt
 flask-socketio
+flask_migrate
 python-socketio
 python-engineio
 flask-sqlalchemy
@@ -8,4 +10,5 @@ werkzeug
 dotenv
 black
 isort
-flake8
+flake8-pyproject
+pytest
