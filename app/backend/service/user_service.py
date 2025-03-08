@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
-from backend.dao.user_dao import UserDAO
+from ..dao.user_dao import UserDAO
 from flask_bcrypt import Bcrypt
 
 bcrypt = Bcrypt()
