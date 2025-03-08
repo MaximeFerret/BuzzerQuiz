@@ -5,22 +5,22 @@ BuzzerQuiz est une application de type quiz interactive avec buzzer , basée sur
 ## Fonctionnalités principales
 - Gestion des questions de quiz et des réponses.
 - Interface simple et responsive.
-- Création d'un compte 
+- Création d'un compte
 - Suppression d'un quiz
-- Creation d'un quiz 
-- Edition d'un quiz 
-- Gestion des sessions des utilisateurs 
+- Creation d'un quiz
+- Edition d'un quiz
+- Gestion des sessions des utilisateurs
 ## Installation et configuration
 ### 1. Cloner le dépôt
 - Clonez le dépôt Git contenant le code de l'application sur votre machine locale :  git clone https://github.com/MaximeFerret/BuzzerQuiz.git
 ### 2.Installer les requirements.txt
 - pip install -r requirements.txt
-### 3.Créer un fichier .env a la racine du projet et ajouter le code suivant 
+### 3.Créer un fichier .env a la racine du projet et ajouter le code suivant
 - SECRET_KEY=VotreCléSecrèteIci
   SQLALCHEMY_DATABASE_URI=sqlite:///buzzerquiz.db
   ADMIN_SECRET_CODE=VotreCodeSecretAdmin
 
-### 3.Lancer l'application localement 
+### 3.Lancer l'application localement
 - il suffit de lancer le fichier main.py
 
 ## Déploiement sur Kubernetes
@@ -31,4 +31,6 @@ BuzzerQuiz est une application de type quiz interactive avec buzzer , basée sur
  ### 2. Accéder à l'application
 - kubectl port-forward svc/buzzer-application 9000:80 #Car on arrive pas a récupérer le IP externe de loadBalancer
 
-
+### Exécuter les tests
+Pour lancer la suite de tests, exécutez la commande suivante à la racine du projet :
+- pytest

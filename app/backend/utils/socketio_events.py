@@ -53,7 +53,7 @@ def on_correct_answer(data):
     # Vérifier si le joueur existe et mettre à jour son score
     if username in players and 'score' in players[username]:
         players[username]['score'] += 100
-        print(f"Score updated for {username}: {players[username]['score']}")  # Log pour déboguer
+        print(f"Score updated for {username}: {players[username]['score']}")
 
         # Émettre le nouveau score à tous les joueurs de la salle
         emit('correct_answer', {
@@ -124,7 +124,8 @@ def on_next_question(data):
 
     quiz_data['current_question'] += 1
     if quiz_data['current_question'] < len(quiz_data['questions']):
-        current_question = quiz_data['questions'][quiz_data['current_question']]
+        current_question = quiz_data['questions'][quiz_data[
+            'current_question']]
         emit('new_question', {'question': {
             'question': current_question.question_text,
             'options': [
@@ -149,8 +150,7 @@ def on_game_over(data):
     scores = data['scores']
 
     # Désactiver le quiz dans la base de données
-    quiz = Quiz.query.filter_by(code=room).first()
-    if quiz:
+    if quiz := Quiz.query.filter_by(code=room).first():
         quiz.is_active = False
         db.session.commit()
 
@@ -168,7 +168,8 @@ def on_host_join(data):
     join_room(room)
 
     # Envoyer la liste actuelle des joueurs à l'hôte
-    room_players = [username for username, data in players.items() if data['room'] == room]
+    room_players = [username for username,
+                    data in players.items() if data['room'] == room]
     for player in room_players:
         emit('player_joined', {'username': player})
         emit('status', {'msg': f'{player} est dans la partie'})
