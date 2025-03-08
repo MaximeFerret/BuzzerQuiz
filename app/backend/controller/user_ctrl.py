@@ -1,11 +1,20 @@
-from flask import (Blueprint, current_app, flash, redirect, render_template,
-                   request, session, url_for)
-from flask_login import login_required, login_user, logout_user
+import re
+from datetime import datetime, timezone
+
 from backend.business_object.db import db
 from backend.business_object.user import User
 from backend.service.user_service import UserService
-from datetime import datetime, timezone
-import re
+from flask import (
+    Blueprint,
+    current_app,
+    flash,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
+from flask_login import login_required, login_user, logout_user
 
 
 def is_valid_email(email):
@@ -22,7 +31,7 @@ def is_valid_email(email):
     -------
         bool: True si l'email est valide, False sinon.
     """
-    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
     return re.match(pattern, email) is not None
 
 
@@ -43,21 +52,18 @@ def is_valid_password(password):
 
     if len(password) < 8:
         return False, "Le mot de passe doit contenir au moins 8 caractères."
-    if not re.search(r'[A-Z]', password):
+    if not re.search(r"[A-Z]", password):
         return False, "Le mot de passe doit contenir au moins une majuscule."
-    if not re.search(r'[a-z]', password):
+    if not re.search(r"[a-z]", password):
         return False, "Le mot de passe doit contenir au moins une minuscule."
-    if not re.search(r'\d', password):
+    if not re.search(r"\d", password):
         return False, "Le mot de passe doit contenir au moins un chiffre."
     if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
-        return (False,
-                "Le mot de passe doit contenir au moins un caractère spécial.")
+        return (False, "Le mot de passe doit contenir au moins un caractère spécial.")
     return True, ""
 
 
-auth_bp = Blueprint("authentication",
-                    __name__,
-                    template_folder="../../frontend/user")
+auth_bp = Blueprint("authentication", __name__, template_folder="../../frontend/user")
 
 
 @auth_bp.route("/register", methods=["GET", "POST"])
@@ -78,7 +84,7 @@ def register():
     email = request.form["email"]
     password = request.form["password"]
     confirm_password = request.form["confirm_password"]
-    is_host = request.form.get('is_host') == 'on'
+    is_host = request.form.get("is_host") == "on"
 
     if not is_valid_email(email):
         flash("L'adresse email n'est pas valide.", "danger")

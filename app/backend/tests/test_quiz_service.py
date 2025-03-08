@@ -1,26 +1,27 @@
-import sys
 import os
+import sys
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from app.backend.service.quiz_service import QuizService
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                             '../../')))
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
 
 class TestQuizService(unittest.TestCase):
 
-    @patch('app.backend.dao.quiz_dao.QuizDAO.add_quiz')
-    @patch('app.backend.service.quiz_service.generate_quiz_code')
+    @patch("app.backend.dao.quiz_dao.QuizDAO.add_quiz")
+    @patch("app.backend.service.quiz_service.generate_quiz_code")
     def test_create_quiz(self, mock_generate_code, mock_add_quiz):
         # GIVEN
         title = "Test Quiz"
         creator_id = 1
-        mock_generate_code.return_value = 'ABC123'
+        mock_generate_code.return_value = "ABC123"
         mock_add_quiz.return_value = {
-            'id': 1,
-            'title': title,
-            'code': 'ABC123',
-            'creator_id': creator_id
+            "id": 1,
+            "title": title,
+            "code": "ABC123",
+            "creator_id": creator_id,
         }
 
         # WHEN
@@ -28,17 +29,17 @@ class TestQuizService(unittest.TestCase):
 
         # THEN
         mock_generate_code.assert_called_once()
-        mock_add_quiz.assert_called_once_with(title, 'ABC123', creator_id)
-        self.assertEqual(result['code'], 'ABC123')
+        mock_add_quiz.assert_called_once_with(title, "ABC123", creator_id)
+        self.assertEqual(result["code"], "ABC123")
 
-    @patch('app.backend.dao.quiz_dao.QuizDAO.get_quiz_by_code')
+    @patch("app.backend.dao.quiz_dao.QuizDAO.get_quiz_by_code")
     def test_get_quiz_by_code(self, mock_get_quiz_by_code):
         # GIVEN
         code = "ABC123"
         mock_get_quiz_by_code.return_value = {
-            'id': 1,
-            'title': "Test Quiz",
-            'code': code
+            "id": 1,
+            "title": "Test Quiz",
+            "code": code,
         }
 
         # WHEN
@@ -46,25 +47,22 @@ class TestQuizService(unittest.TestCase):
 
         # THEN
         mock_get_quiz_by_code.assert_called_once_with(code)
-        self.assertEqual(result['code'], code)
+        self.assertEqual(result["code"], code)
 
-    @patch('app.backend.dao.quiz_dao.QuizDAO.get_quiz_by_id')
+    @patch("app.backend.dao.quiz_dao.QuizDAO.get_quiz_by_id")
     def test_get_quiz_by_id(self, mock_get_quiz_by_id):
         # GIVEN
         quiz_id = 1
-        mock_get_quiz_by_id.return_value = {
-            'id': quiz_id,
-            'title': "Test Quiz"
-        }
+        mock_get_quiz_by_id.return_value = {"id": quiz_id, "title": "Test Quiz"}
 
         # WHEN
         result = QuizService.get_quiz_by_id(quiz_id)
 
         # THEN
         mock_get_quiz_by_id.assert_called_once_with(quiz_id)
-        self.assertEqual(result['id'], quiz_id)
+        self.assertEqual(result["id"], quiz_id)
 
-    @patch('app.backend.dao.quiz_dao.QuizDAO.add_question')
+    @patch("app.backend.dao.quiz_dao.QuizDAO.add_question")
     def test_add_question_to_quiz(self, mock_add_question):
         # GIVEN
         quiz_id = 1
@@ -74,8 +72,9 @@ class TestQuizService(unittest.TestCase):
         correct_answer = "4"
 
         # WHEN
-        QuizService.add_question_to_quiz(quiz_id, question_text, has_choices,
-                                         options, correct_answer)
+        QuizService.add_question_to_quiz(
+            quiz_id, question_text, has_choices, options, correct_answer
+        )
 
         # THEN
         mock_add_question.assert_called_once()
@@ -83,8 +82,8 @@ class TestQuizService(unittest.TestCase):
         self.assertEqual(added_question.quiz_id, quiz_id)
         self.assertEqual(added_question.correct_answer, correct_answer)
 
-    @patch('app.backend.dao.quiz_dao.QuizDAO.delete_quiz')
-    @patch('app.backend.dao.quiz_dao.QuizDAO.delete_questions_by_quiz_id')
+    @patch("app.backend.dao.quiz_dao.QuizDAO.delete_quiz")
+    @patch("app.backend.dao.quiz_dao.QuizDAO.delete_questions_by_quiz_id")
     def test_delete_quiz(self, mock_delete_questions, mock_delete_quiz):
         # GIVEN
         quiz = MagicMock()
@@ -98,5 +97,5 @@ class TestQuizService(unittest.TestCase):
         mock_delete_quiz.assert_called_once_with(quiz)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

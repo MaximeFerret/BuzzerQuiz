@@ -1,14 +1,17 @@
-import pytest
-from unittest.mock import patch, MagicMock
 from datetime import datetime, timedelta, timezone
+from unittest.mock import MagicMock, patch
+
+import pytest
 from backend.service.user_service import UserService
 
 
 @pytest.fixture
 def mock_user():
     """Fixture pour créer un utilisateur fictif"""
+
     class MockUser:
         """Mock pour un utilisateur"""
+
         def __init__(self, username, email, password_hash, is_host):
             self.username = username
             self.email = email
@@ -29,19 +32,18 @@ def test_create_user(mock_hash, mock_create_user, mock_user):
     mock_hash.return_value = "hashed_password"
     mock_create_user.return_value = mock_user
 
-    user = UserService.create_user("testuser", "test@example.com", "password",
-                                   False)
+    user = UserService.create_user("testuser", "test@example.com", "password", False)
 
     assert user == mock_user
     mock_hash.assert_called_once_with("password")
-    mock_create_user.assert_called_once_with("testuser", "test@example.com",
-                                             "hashed_password", False)
+    mock_create_user.assert_called_once_with(
+        "testuser", "test@example.com", "hashed_password", False
+    )
 
 
 @patch("backend.dao.user_dao.UserDAO.get_user_by_email")
 @patch("backend.service.user_service.bcrypt.check_password_hash")
-def test_authenticate_user_success(mock_check_password, mock_get_user,
-                                   mock_user):
+def test_authenticate_user_success(mock_check_password, mock_get_user, mock_user):
     """
     GIVEN un email et un mot de passe valides
     WHEN authenticate_user est appelé
@@ -140,11 +142,14 @@ def test_reset_admin_session():
     assert session["admin_last_active"] is None
 
 
-@pytest.mark.parametrize("last_active, timeout, expected", [
-    (datetime.now(timezone.utc) - timedelta(minutes=5), 10, False),
-    (datetime.now(timezone.utc) - timedelta(minutes=15), 10, True),
-    (None, 10, True)  # Aucune activité => expiré
-])
+@pytest.mark.parametrize(
+    "last_active, timeout, expected",
+    [
+        (datetime.now(timezone.utc) - timedelta(minutes=5), 10, False),
+        (datetime.now(timezone.utc) - timedelta(minutes=15), 10, True),
+        (None, 10, True),  # Aucune activité => expiré
+    ],
+)
 def test_check_session_expiry(last_active, timeout, expected):
     """
     GIVEN une dernière activité et un timeout

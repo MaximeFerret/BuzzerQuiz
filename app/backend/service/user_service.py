@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+
 from backend.dao.user_dao import UserDAO
 from flask_bcrypt import Bcrypt
 
@@ -9,6 +10,7 @@ class UserService:
     """
     Service pour les opérations liées aux utilisateurs.
     """
+
     @staticmethod
     def create_user(username, email, password, is_host):
         """Création de l'utilisateur et sauvgarder
@@ -44,8 +46,7 @@ class UserService:
         """
         user = UserDAO.get_user_by_email(email)
 
-        if not user or not bcrypt.check_password_hash(user.password_hash,
-                                                      password):
+        if not user or not bcrypt.check_password_hash(user.password_hash, password):
             return None
 
         return user
@@ -100,8 +101,7 @@ class UserService:
         -------
             dict: la session de l'admin.
         """
-        return {"is_admin": True,
-                "admin_last_active": datetime.now(timezone.utc)}
+        return {"is_admin": True, "admin_last_active": datetime.now(timezone.utc)}
 
     @staticmethod
     def reset_user_session():

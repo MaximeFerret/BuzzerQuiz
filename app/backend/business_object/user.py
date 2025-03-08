@@ -1,6 +1,7 @@
-from ..business_object.db import db
 from flask_bcrypt import Bcrypt
 from flask_login import UserMixin
+
+from ..business_object.db import db
 
 bcrypt = Bcrypt()
 
@@ -21,12 +22,13 @@ class User(db.Model, UserMixin):
         is_host (bool): si l'utilisateur est un hôte ou non.
         quizzes (list): les quizzes créés par l'utilisateur.
     """
+
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     is_host = db.Column(db.Boolean, default=False)
-    quizzes = db.relationship('Quiz', backref='creator', lazy=True)
+    quizzes = db.relationship("Quiz", backref="creator", lazy=True)
 
     def set_password(self, password):
         """

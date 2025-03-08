@@ -22,8 +22,12 @@ class UserDAO:
         """
         try:
 
-            new_user = User(username=username, email=email,
-                            password_hash=password_hash, is_host=is_host)
+            new_user = User(
+                username=username,
+                email=email,
+                password_hash=password_hash,
+                is_host=is_host,
+            )
             db.session.add(new_user)
             db.session.commit()
             return new_user

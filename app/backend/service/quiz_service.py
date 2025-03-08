@@ -1,5 +1,5 @@
-from ..dao.quiz_dao import QuizDAO
 from ..business_object.quiz import Question
+from ..dao.quiz_dao import QuizDAO
 from ..utils.generateur_code import generate_quiz_code
 
 
@@ -7,6 +7,7 @@ class QuizService:
     """
     Service pour les opérations liées aux quizzes.
     """
+
     @staticmethod
     def create_quiz(title, creator_id):
         """Créer un quiz
@@ -88,8 +89,9 @@ class QuizService:
         QuizDAO.delete_quiz(quiz)
 
     @staticmethod
-    def add_question_to_quiz(quiz_id, question_text, has_choices, options,
-                             correct_answer):
+    def add_question_to_quiz(
+        quiz_id, question_text, has_choices, options, correct_answer
+    ):
         """Ajouter une question à un quiz
 
         Cette méthode permet d'ajouter une question à un quiz.
@@ -110,7 +112,7 @@ class QuizService:
             option2=options[1] if len(options) > 1 else None,
             option3=options[2] if len(options) > 2 else None,
             option4=options[3] if len(options) > 3 else None,
-            correct_answer=correct_answer
+            correct_answer=correct_answer,
         )
         QuizDAO.add_question(question)
 

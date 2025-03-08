@@ -16,12 +16,12 @@ class Quiz(db.Model):
         questions (list): les questions du quiz.
         is_active (bool): si le quiz est actif.
     """
+
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     code = db.Column(db.String(6), unique=True, nullable=False)
-    creator_id = db.Column(db.Integer, db.ForeignKey('user.id'),
-                           nullable=False)
-    questions = db.relationship('Question', backref='quiz', lazy=True)
+    creator_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    questions = db.relationship("Question", backref="quiz", lazy=True)
     is_active = db.Column(db.Boolean, default=False)
 
 
@@ -44,8 +44,9 @@ class Question(db.Model):
         option4 (str): la quatrième option de la question.
         correct_answer (int): la réponse correcte de la question.
     """
+
     id = db.Column(db.Integer, primary_key=True)
-    quiz_id = db.Column(db.Integer, db.ForeignKey('quiz.id'), nullable=False)
+    quiz_id = db.Column(db.Integer, db.ForeignKey("quiz.id"), nullable=False)
     question_text = db.Column(db.String(500), nullable=False)
     has_choices = db.Column(db.Boolean, nullable=False, default=True)
     option1 = db.Column(db.String(200), nullable=True)

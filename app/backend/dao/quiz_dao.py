@@ -1,9 +1,10 @@
-from ..business_object.quiz import Quiz, Question
 from ..business_object.db import db
+from ..business_object.quiz import Question, Quiz
 
 
 class QuizDAOError(Exception):
     """Exception spécifique pour les erreurs de QuizDAO."""
+
     pass
 
 
@@ -80,9 +81,7 @@ class QuizDAO:
             return quiz
         except Exception as e:
             db.session.rollback()
-            raise QuizDAOError(
-                f"Erreur lors de l'ajout du quiz: {str(e)}"
-            ) from e
+            raise QuizDAOError(f"Erreur lors de l'ajout du quiz: {str(e)}") from e
 
     @staticmethod
     def delete_quiz(quiz):
