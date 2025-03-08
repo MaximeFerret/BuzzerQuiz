@@ -5,7 +5,8 @@ class Quiz(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     code = db.Column(db.String(6), unique=True, nullable=False)
-    creator_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    creator_id = db.Column(db.Integer, db.ForeignKey('user.id'),
+                           nullable=False)
     questions = db.relationship('Question', backref='quiz', lazy=True)
     is_active = db.Column(db.Boolean, default=False)
 
