@@ -42,7 +42,17 @@ def homepage():
 
 if __name__ == "__main__":
     with app.app_context():
-        #print("Flask URL Map:", app.url_map)  # 打印所有可用路由
+        #print("Flask URL Map:", app.url_map)
 
-        db.create_all()  # Crée la base de données si elle n'existe pas encore
+        db.create_all()
+
+    #import socket
+
+    # pour avoir l'ip locale si elle ne s'affiche pas ou si elle est 127.0.0.1
+    #def get_local_ip():
+    #    return socket.gethostbyname(socket.gethostname())
+
+    #local_ip = get_local_ip()
+    #print(f"Accède à l'application sur : http://{local_ip}:5000")
+
     socketio.run(app, host="0.0.0.0", debug=True)

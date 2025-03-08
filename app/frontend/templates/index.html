@@ -91,6 +91,18 @@
             border-color: #46178f;
             outline: none;
         }
+        .links {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .links a {
+            color: #46178f;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        .links a:hover {
+            text-decoration: underline;
+        }
         .submit-button {
             width: 100%;
             padding: 12px;
@@ -193,6 +205,9 @@
                 <input type="text" id="game-code" placeholder="Entrez le code de la partie" required>
             </div>
             <button class="submit-button" onclick="joinGame(event)">Rejoindre la partie</button>
+            <div class="links">
+                <a href="{{ url_for('homepage') }}">Retour à l'accueil</a>
+            </div>
         </div>
 
         <div class="game-area" id="gameArea">

@@ -5,35 +5,63 @@ from backend.business_object.db import db
 from backend.business_object.user import User
 from backend.service.user_service import UserService
 from datetime import datetime, timezone, timedelta
+import re
+
+def is_valid_email(email):
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return re.match(pattern, email) is not None
+
+def is_valid_password(password):
+    if len(password) < 8:
+        return False, "Le mot de passe doit contenir au moins 8 caractères."
+    if not re.search(r'[A-Z]', password):
+        return False, "Le mot de passe doit contenir au moins une majuscule."
+    if not re.search(r'[a-z]', password):
+        return False, "Le mot de passe doit contenir au moins une minuscule."
+    if not re.search(r'\d', password):
+        return False, "Le mot de passe doit contenir au moins un chiffre."
+    if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+        return False, "Le mot de passe doit contenir au moins un caractère spécial."
+    return True, ""
 
 auth_bp = Blueprint("authentication", __name__, template_folder="../../frontend/user")
 
 
 @auth_bp.route("/register", methods=["GET", "POST"])
 def register():
-    if request.method == "POST":
-        username = request.form["username"]
-        email = request.form["email"]
-        password = request.form["password"]
-        confirm_password = request.form["confirm_password"]
-        is_host = request.form.get('is_host') == 'on'
+    if request.method == "GET":
+        return render_template("register.html")
 
-        if password != confirm_password:
-            flash("Les mots de passe ne correspondent pas.", "danger")
-            return redirect(url_for("authentication.register"))
+    username = request.form["username"]
+    email = request.form["email"]
+    password = request.form["password"]
+    confirm_password = request.form["confirm_password"]
+    is_host = request.form.get('is_host') == 'on'
 
-        if UserService.get_user_by_email(email):
-            flash("Cet email est déjà utilisé.", "danger")
-            return redirect(url_for("authentication.register"))
+    if not is_valid_email(email):
+        flash("L'adresse email n'est pas valide.", "danger")
+        return redirect(url_for("authentication.register"))
 
-        if UserService.get_user_by_username(username):
-            flash("Cet username est déjà utilisé.", "danger")
-            return redirect(url_for("authentication.register"))
+    is_password_valid, password_error = is_valid_password(password)
+    if not is_password_valid:
+        flash(password_error, "danger")
+        return redirect(url_for("authentication.register"))
 
-        new_user = UserService.create_user(username, email, password, is_host)
-        flash("Compte créé avec succès ! Connectez-vous.", "success")
-        return redirect(url_for("authentication.login"))
-    return render_template("register.html")
+    if password != confirm_password:
+        flash("Les mots de passe ne correspondent pas.", "danger")
+        return redirect(url_for("authentication.register"))
+
+    if UserService.get_user_by_email(email):
+        flash("Cet email est déjà utilisé.", "danger")
+        return redirect(url_for("authentication.register"))
+
+    if UserService.get_user_by_username(username):
+        flash("Cet username est déjà utilisé.", "danger")
+        return redirect(url_for("authentication.register"))
+
+    UserService.create_user(username, email, password, is_host)
+    flash("Compte créé avec succès ! Connectez-vous.", "success")
+    return redirect(url_for("authentication.login"))
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])
