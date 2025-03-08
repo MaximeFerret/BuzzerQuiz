@@ -22,7 +22,7 @@ BuzzerQuiz est une application de type quiz interactive avec buzzer , basée sur
 
 ### 3.Lancer l'application localement
 - il suffit de lancer le fichier main.py
-
+- ATTENTION : Pour rejoindre une session de quiz avec un autre appareil il est important que les deux appareils soient connectés au même réseau internet !!
 ## Déploiement sur Kubernetes
  ### 1. Appliquer la configuration Kubernetes
 - kubectl apply -f kubernetes/configmap.yaml
@@ -34,3 +34,10 @@ BuzzerQuiz est une application de type quiz interactive avec buzzer , basée sur
 ### Exécuter les tests
 Pour lancer la suite de tests, exécutez la commande suivante à la racine du projet :
 - pytest
+
+### Limites de notre application
+- Dans les sessions de quiz, l'exclusion n'est pas définitive, malgré cette fonctionnalité les joueurs ne sont pas totalement exclu.
+- Les joueurs ne peuvent buzzer qu'une fois et il n'existe pas de liste d'attente.
+- L'affiche des scores à chaque fin de partie ne s'incrémente pas correctement.
+- Les transitions sur téléphone ne sont pas fluides.
+- Le buzzer ne fait pas de bruit.
