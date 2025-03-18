@@ -62,4 +62,4 @@ if __name__ == "__main__":
     local_ip = get_local_ip()
     print(f"Accède à l'application sur : http://{local_ip}:5000")
 
-    socketio.run(app, host="0.0.0.0", debug=True)
+    socketio.run(app, host="0.0.0.0", debug=True, allow_unsafe_werkzeug=True)

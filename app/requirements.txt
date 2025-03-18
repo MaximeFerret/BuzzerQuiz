@@ -1,0 +1,14 @@
+flask
+flask_bcrypt
+flask-socketio
+flask_migrate
+python-socketio
+python-engineio
+flask-sqlalchemy
+flask-login
+werkzeug
+dotenv
+black
+isort
+flake8-pyproject
+pytest
