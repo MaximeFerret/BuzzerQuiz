@@ -23,6 +23,7 @@ print(f"DATABASE URI: {DATABASE_URI}")
 
 app = Flask(__name__, template_folder="frontend/templates")
 app.config.from_object("backend.config.Config")
+app.config["APPLICATION_ROOT"] = "/"
 socketio.init_app(app)
 
 db.init_app(app)
