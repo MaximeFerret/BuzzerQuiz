@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: buzzer-application
-          image: hiba182/buzzerquiz:latest
+          image: ferretmaxime/buzzerquiz:latest
           command: ["python", "main.py"]
           resources:
             limits:
