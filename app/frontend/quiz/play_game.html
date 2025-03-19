@@ -81,6 +81,10 @@
         <div class="status" id="status">En attente du début de la partie...</div>
         <button class="buzzer" id="buzzer" onclick="buzz()">BUZZER</button>
         <div class="score" id="score">Score: 0</div>
+        <div class="question-container" id="questionContainer" style="display: none;">
+            <div class="question-text" id="questionText"></div>
+            <div class="options-grid" id="optionsGrid"></div>
+        </div>
         <div class="game-over" id="gameOver">
             <h2>Partie terminée!</h2>
             <div class="final-scores" id="finalScores"></div>
@@ -150,6 +154,28 @@
         });
 
         socket.on('can_buzz', function() {
+            enableBuzzer();
+        });
+
+        socket.on('next_question', function(data) {
+            document.getElementById('status').textContent = 'Nouvelle question!';
+            
+            // Ensure the question and options elements exist
+            const questionContainer = document.getElementById('questionContainer');
+            questionContainer.style.display = 'block';
+
+            const questionText = document.getElementById('questionText');
+            questionText.textContent = data.question.question;
+
+            const optionsGrid = document.getElementById('optionsGrid');
+            optionsGrid.innerHTML = '';
+            data.question.options.forEach((optionText, index) => {
+                const option = document.createElement('div');
+                option.className = 'option';
+                option.textContent = optionText;
+                optionsGrid.appendChild(option);
+            });
+
             enableBuzzer();
         });
 

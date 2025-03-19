@@ -310,7 +310,12 @@
             });
         });
 
-        function updatePlayersGrid() {
+        socket.on('kicked', function() {
+            alert('Vous avez été exclu de la partie');
+            window.location.href = '/';
+        });
+
+        function updatePlayersGrid() {  
             const grid = document.getElementById('playersGrid');
             grid.innerHTML = '';
 
@@ -348,7 +353,7 @@
             }
 
             currentBuzzer = null;
-            nextQuestion();
+            socket.emit('next_question', { room: gameCode }); // Emit next question event
         }
 
         function rejectAnswer(username) {
@@ -364,7 +369,7 @@
             }
 
             currentBuzzer = null;
-            socket.emit('can_buzz', { room: gameCode }); // Permettre aux autres de buzzer
+            socket.emit('next_question', { room: gameCode }); // Emit next question event
         }
 
         function nextQuestion() {

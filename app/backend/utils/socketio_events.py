@@ -194,9 +194,8 @@ def on_kick_player(data):
     # Émettre un événement au joueur pour qu'il soit redirigé
     emit("kicked", {}, room=username)
 
-    # Retirer le joueur de la room
-    for sid in request.sid:
-        if sid in room and room[sid] == username:
-            leave_room(room, sid=sid)
-            emit("player_left", {"username": username}, room=room)
-            break
+    # Retirer le joueur de la room et du dictionnaire des joueurs
+    if username in players:
+        leave_room(room, sid=request.sid)
+        del players[username]
+        emit("player_left", {"username": username}, room=room)
