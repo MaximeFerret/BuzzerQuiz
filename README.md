@@ -29,7 +29,7 @@ BuzzerQuiz est une application de type quiz interactive avec buzzer , basée sur
 - kubectl apply -f kubernetes/deployment.yaml
 - kubectl apply -f kubernetes/service.yaml
  ### 2. Accéder à l'application
-- kubectl port-forward svc/buzzer-application 9000:80 #Car on arrive pas a récupérer le IP externe de loadBalancer
+- buzzer.kub.sspcloud.fr  
 
 ### Exécuter les tests
 Pour lancer la suite de tests, exécutez la commande suivante à la racine du projet :
