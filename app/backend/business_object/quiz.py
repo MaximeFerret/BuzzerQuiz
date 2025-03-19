@@ -21,8 +21,9 @@ class Quiz(db.Model):
     title = db.Column(db.String(100), nullable=False)
     code = db.Column(db.String(6), unique=True, nullable=False)
     creator_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    questions = db.relationship("Question", backref="quiz", lazy=True, 
-                                cascade="all, delete-orphan")
+    questions = db.relationship(
+        "Question", backref="quiz", lazy=True, cascade="all, delete-orphan"
+    )
     is_active = db.Column(db.Boolean, default=False)
 
 

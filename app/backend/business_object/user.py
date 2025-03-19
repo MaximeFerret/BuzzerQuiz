@@ -28,8 +28,9 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     is_host = db.Column(db.Boolean, default=False)
-    quizzes = db.relationship("Quiz", backref="creator", lazy=True, 
-                              cascade="all, delete-orphan")
+    quizzes = db.relationship(
+        "Quiz", backref="creator", lazy=True, cascade="all, delete-orphan"
+    )
 
     def set_password(self, password):
         """
