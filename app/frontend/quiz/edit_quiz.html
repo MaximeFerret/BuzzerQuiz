@@ -283,12 +283,9 @@
         }
 
         function deleteQuestion(button) {
-            if (document.getElementsByClassName('question-container').length > 1) {
-                button.closest('.question-container').remove();
-                renumberQuestions();
-            } else {
-                alert('Le quiz doit contenir au moins une question');
-            }
+            const questionContainer = button.closest('.question-container');
+            questionContainer.remove();
+            renumberQuestions();
         }
 
         function addOption(btn) {
@@ -401,10 +398,50 @@
         }
 
         function renumberQuestions() {
-            const questions = document.getElementsByClassName('question-container');
-            Array.from(questions).forEach((question, index) => {
-                const questionTitle = question.querySelector('.question-title');
-                questionTitle.textContent = `Question ${index + 1}`;
+            const questions = document.querySelectorAll('.question-container');
+            questions.forEach((question, index) => {
+                const questionIndex = index + 1;
+                question.querySelector('.question-title').textContent = `Question ${questionIndex}`;
+        
+                // Met à jour l'id et le name de l'input question
+                const questionInput = question.querySelector('input[name^="question"]');
+                if (questionInput) {
+                    questionInput.id = `question${questionIndex}`;
+                    questionInput.name = `question${questionIndex}`;
+                }
+        
+                // Met à jour l'id et le name du checkbox "has_choices"
+                const checkbox = question.querySelector('input[name^="has_choices"]');
+                if (checkbox) {
+                    checkbox.id = `has_choices${questionIndex}`;
+                    checkbox.name = `has_choices${questionIndex}`;
+                    checkbox.setAttribute("onchange", `toggleOptions(${questionIndex})`);
+                }
+        
+                // Met à jour l'id du container des options
+                const optionsContainer = question.querySelector('.options-container');
+                if (optionsContainer) {
+                    optionsContainer.id = `options_container${questionIndex}`;
+                }
+        
+                // Met à jour les options et les boutons radios
+                const optionInputs = question.querySelectorAll('.option-group input[type="text"]');
+                optionInputs.forEach((input, i) => {
+                    input.id = `option${i + 1}_${questionIndex}`;
+                    input.name = `option${i + 1}_${questionIndex}`;
+                    input.placeholder = `Option ${i + 1}`;
+                });
+        
+                const radioInputs = question.querySelectorAll('.option-group input[type="radio"]');
+                radioInputs.forEach((radio, i) => {
+                    radio.id = `correct${questionIndex}_${i + 1}`;
+                    radio.name = `correct_answer_${questionIndex}`;
+                    radio.value = i + 1;
+                    const label = radio.nextElementSibling;
+                    if (label) {
+                        label.setAttribute("for", `correct${questionIndex}_${i + 1}`);
+                    }
+                });
             });
         }
 
